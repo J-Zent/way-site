@@ -244,7 +244,6 @@
         for (const f of L.features) {
           const p = f.props;
           if (lname === "water" && f.type === 3) {
-            if (p.class === "river" && !riverBanks) continue;
             const isSea = SEA.test(p.class || ""), rings = [];
             for (const ring of f.rings) {
               const c = clipPolygonRing(ring, E);

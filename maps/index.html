@@ -1241,6 +1241,7 @@ out tags center;`;
         // Average width of a strip is about 2 x area / perimeter; under ~3 hatch spacings it is too thin to hatch.
         const per = a.rs.reduce((s, r) => s + r.reduce((q, pt, i) => q + Math.hypot(pt[0] - r[(i + 1) % r.length][0], pt[1] - r[(i + 1) % r.length][1]), 0), 0);
         const narrow = per > 0 && 2 * ar / per < 15;
+        if (narrow) { a.river = true; a.width = 2 * ar / per; }
         (!a.river && !narrow && (ar >= BIG || (a.big && ar >= BIG / 4)) ? big : small).push(a.rs);
       }
       // Real lines clipped to the water, not a repeating pattern: patterns leave seams where tiles meet.
@@ -1280,7 +1281,8 @@ out tags center;`;
     }
     if (sm > 0) snapEnds(lines.map(l => l.pts), 4 + sm * 3);
     // a centre line running inside a wide river shape is hidden; the shape already shows the river
-    const riverRs = areas.filter(a => a.river).map(a => a.rs);
+    // a river drawn at its real width hides its centre line; a river thinner than the line keeps the line
+    const riverRs = areas.filter(a => a.river && !(a.width < 1.8)).map(a => a.rs);
     const drawn = lines.filter(l => {
       if (!riverRs.length) return true;
       const inside = l.pts.filter((p, i) => i % 3 === 0 && riverRs.some(rs => insideRings(p, rs))).length;
