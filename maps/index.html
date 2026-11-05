@@ -1237,7 +1237,8 @@ out tags center;`;
       for (const a of areas) {
         // a piece cut by a tile edge belongs to something larger, so it qualifies sooner
         const ar = Math.abs(a.rs.reduce((s, r) => s + polyArea(r), 0));
-        (ar >= BIG || (a.big && ar >= BIG / 4) ? big : small).push(a.rs);
+        // rivers are long and narrow: solid water reads as a river, hatching only scratches it
+        (!a.river && (ar >= BIG || (a.big && ar >= BIG / 4)) ? big : small).push(a.rs);
       }
       // Real lines clipped to the water, not a repeating pattern: patterns leave seams where tiles meet.
       const gap = o.hatchGap || 5, wgt = o.hatchWidth || 1.6;
