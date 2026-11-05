@@ -2040,7 +2040,8 @@ out tags center;`;
     // a new search retries any water or trails that failed before
     for (const m of [waterData, trailData]) for (const [k, v] of m) if (v.status === "error") m.delete(k);
     const patch = { place: { kind: "live", lat: p.lat, lon: p.lon, name: p.name, sub: p.sub }, title: "", subtitle: "" };
-    if (bboxKm && bboxKm >= 2) patch.widthKm = WIDTHS.find(v => v >= bboxKm * 1.15) || WIDTHS[WIDTHS.length - 1];
+    // fit the place, but never jump past 15 km on its own: big maps load slowly, so going bigger is the visitor's choice
+    if (bboxKm && bboxKm >= 2) patch.widthKm = Math.min(15, WIDTHS.find(v => v >= bboxKm * 1.15) || 15);
     resultsEl.innerHTML = ""; say("");
     set(patch);
   }
