@@ -219,7 +219,7 @@
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) tiles.push([x, y]);
       if (tiles.length <= (opts.maxTiles || 150) || z <= 8) break;
     }
-    const want = new Set(["water", "waterway", "water_name", "transportation", "transportation_name"]);
+    const want = new Set(["water", "waterway", "water_name", "transportation", "transportation_name", "mountain_peak"]);
     let done = 0;
     const results = await Promise.all(tiles.map(async ([x, y]) => {
       const url = tpl.replace("{z}", z).replace("{x}", x).replace("{y}", y);
@@ -231,7 +231,7 @@
       return { x, y, layers };
     }));
 
-    const areas = [], sea = [], shore = [], lines = [], trailPieces = [], namePieces = [], names = [];
+    const areas = [], sea = [], shore = [], lines = [], trailPieces = [], namePieces = [], names = [], peaks = [];
     // Rivers are mapped twice: a centre line and the outline of their banks. Past a few km across,
     // the banks are only a millimetre or two apart on paper, and their raw outline wobbles against the
     // smoothed centre line. There the centre line alone draws the river.
@@ -277,6 +277,12 @@
             if (!isTrail || p.access === "no" || p.access === "private") continue;
             for (const line of f.rings) for (const piece of clipLine(line, E))
               trailPieces.push({ group: cls, kind: cls === "track" ? "track" : "trail", name: "", coords: piece.map(ll) });
+          } else if (lname === "mountain_peak" && f.type === 1 && p.name && /^(peak|volcano)$/.test(p.class || "peak")) {
+            const pt = f.rings[0] && f.rings[0][0];
+            if (pt && pt[0] >= 0 && pt[0] <= E && pt[1] >= 0 && pt[1] <= E) {
+              const [lon, lat] = ll(pt);
+              peaks.push({ name: p.name, ele: typeof p.ele === "number" ? p.ele : null, rank: p.rank || 99, lon, lat });
+            }
           } else if (lname === "transportation_name" && f.type === 2 && p.name && /^(path|track)$/.test(p.class || "")) {
             for (const line of f.rings) for (const piece of clipLine(line, E))
               namePieces.push({ group: p.class + "|" + p.name, kind: p.class === "track" ? "track" : "trail", name: p.name, labelOnly: true, coords: piece.map(ll) });
@@ -297,7 +303,7 @@
       if (hit) hit.name = n.name;
     }
 
-    const water = { lines: joinLines(lines), areas, coast: [], sea, shore, seaNames, source: "omt" };
+    const water = { lines: joinLines(lines), areas, coast: [], sea, shore, seaNames, peaks, source: "omt" };
     const trails = joinLines(trailPieces).concat(joinLines(namePieces));
     return { water, trails, zoom: z, tiles: tiles.length };
   }

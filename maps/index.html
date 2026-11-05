@@ -208,6 +208,8 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
         <label><input type="checkbox" id="lyPeaks" checked> Summits</label>
         <label><input type="checkbox" id="lyLabels" checked> Labels</label>
         <label><input type="checkbox" id="lyTrails" checked> Trails</label>
+        <label><input type="checkbox" id="lyPeakNames" checked> Summit names</label>
+        <label><input type="checkbox" id="lyMainTrails" checked> Main trails only</label>
         <label><input type="checkbox" id="lyWaterNames" checked> Water names</label>
       </div>
     </fieldset>
@@ -887,6 +889,8 @@ out body geom;`;
     }
     const order = { track: 0, trail: 1, route: 2 };
     lines.sort((a, b) => order[a.kind] - order[b.kind]);
+    // main trails only: the named ones, drawn from their named line
+    if (o.mainOnly) { const named = lines.filter(l => l.name).map(l => ({ ...l, labelOnly: false })); lines.length = 0; lines.push(...named); }
 
     const clip = o.clipId ? ` clip-path="url(#${o.clipId})"` : "";
     let haloD = "";
@@ -1491,7 +1495,7 @@ out tags center;`;
   const state = {
     place: { kind: "live", lat: 48.5343, lon: -123.0171, name: "San Juan Islands", sub: "San Juan County, Washington, United States" }, widthKm: 10, paper: "A3", orient: "portrait", title: "", subtitle: "",
     mode: "white", accent: "flame", units: "ft", interval: "auto", smooth: 1.25, waterSmooth: 1,
-    trails: true, waterNames: true, grid: true, water: true, peaks: true, labels: true
+    trails: true, mainTrails: true, peakNames: true, waterNames: true, grid: true, water: true, peaks: true, labels: true
   };
   try { const s = JSON.parse(localStorage.getItem("topo-sheet-v2") || "null"); if (s) Object.assign(state, s); } catch (e) {}
   if (!state.place || state.place.kind !== "live") state.place = { kind: "live", lat: 48.5343, lon: -123.0171, name: "San Juan Islands", sub: "San Juan County, Washington, United States" };
@@ -1555,7 +1559,7 @@ out tags center;`;
     return m;
   }
   function ensureOSM(L) {
-    const wantWater = (state.water || state.waterNames) && window.Water && !waterData.has(L.id);
+    const wantWater = (state.water || state.waterNames || state.peakNames) && window.Water && !waterData.has(L.id);
     const wantTrails = state.trails && window.Trails && !trailData.has(L.id);
     if (osmFor === L.id) return;                       // already queued or running for this map
     if (!wantWater && !wantTrails) return;
@@ -1768,6 +1772,21 @@ out tags center;`;
       if (px < mx + 24 || px > mx + MW - 70 || py < my + 20 || py > my + MH - 20) continue;
       if (pk.every(q => Math.hypot(q.x - px, q.y - py) > 70)) pk.push({ x: px, y: py, e });
     }
+    // names from OpenStreetMap: a named summit takes over the nearest elevation peak, or is added on its own
+    {
+      const wd1 = waterData.get(L.id), osmPk = state.peaks && state.peakNames && wd1 && wd1.status === "ok" && wd1.data.peaks;
+      if (osmPk && osmPk.length) {
+        const proj1 = (lon, lat) => { const [ex, ny] = Terrain.toUTM(lon, lat, L.proj); return [ux(ex), uy(ny)]; };
+        const named = osmPk.map(q => { const [x, y] = proj1(q.lon, q.lat); return { ...q, x, y }; })
+          .filter(q => q.x > mx + 24 && q.x < mx + MW - 120 && q.y > my + 24 && q.y < my + MH - 20)
+          .sort((a, b) => a.rank - b.rank || (b.ele || 0) - (a.ele || 0));
+        for (const q of named) {
+          const near = pk.filter(p => !p.name).sort((a, b) => Math.hypot(a.x - q.x, a.y - q.y) - Math.hypot(b.x - q.x, b.y - q.y))[0];
+          if (near && Math.hypot(near.x - q.x, near.y - q.y) < 30) { near.name = q.name; continue; }
+          if (pk.every(p => Math.hypot(p.x - q.x, p.y - q.y) > 60) && q.ele != null) pk.push({ x: q.x, y: q.y, e: q.ele, name: q.name });
+        }
+      }
+    }
 
     // contour labels on index lines
     const placed = pk.map(p => ({ x: p.x + 20, y: p.y }));
@@ -1860,7 +1879,7 @@ out tags center;`;
     const showTrails = state.trails && td && td.status === "ok" && td.list.length > 0;
     if (showTrails) {
       parts.push(Trails.render(td.list, {
-        project, color: A, halo: M.bg, clipId: "mapclip", labels: state.labels,
+        project, color: A, halo: M.bg, clipId: "mapclip", labels: state.labels, mainOnly: state.mainTrails,
         bounds: frame, avoid: baseAvoid.concat(waterPlaced)
       }));
     }
@@ -1884,6 +1903,7 @@ out tags center;`;
         const col = hi && !showTrails ? A : M.text;
         if (hi) parts.push(`<circle cx="${f1(p.x)}" cy="${f1(p.y)}" r="19" fill="none" stroke="${ringCol}" stroke-opacity="${showTrails ? 0.7 : 1}" stroke-width="1.6" stroke-dasharray="0.1 5" stroke-linecap="round"/>`);
         parts.push(`<path d="M${f1(p.x - 5)} ${f1(p.y)}H${f1(p.x + 5)}M${f1(p.x)} ${f1(p.y - 5)}V${f1(p.y + 5)}" stroke="${col}" stroke-width="${hi ? 1.8 : 1.2}"/>`);
+        if (p.name) parts.push(`<text x="${f1(p.x + (hi ? 24 : 9))}" y="${f1(p.y - (hi ? 14 : 12))}" dominant-baseline="central" font-size="${hi ? 10 : 8.5}" letter-spacing="0.06em" fill="${col}" stroke="${M.bg}" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(p.name.toUpperCase())}</text>`);
         parts.push(`<text x="${f1(p.x + (hi ? 24 : 9))}" y="${f1(p.y)}" dominant-baseline="central" fill="${col}" stroke="${M.bg}" stroke-width="4" paint-order="stroke" stroke-linejoin="round"${hi ? ` font-family="DM Mono, monospace" font-weight="500" font-size="11.5"` : ""}>${fmt(p.e * (state.units === "ft" ? FT : 1))}</text>`);
       }
       parts.push(`</g>`);
@@ -2065,6 +2085,8 @@ out tags center;`;
     document.getElementById("lyLabels").checked = state.labels;
     document.getElementById("lyTrails").checked = state.trails;
     document.getElementById("lyWaterNames").checked = state.waterNames;
+    document.getElementById("lyPeakNames").checked = state.peakNames;
+    document.getElementById("lyMainTrails").checked = state.mainTrails;
   }
 
   document.getElementById("areaW").addEventListener("change", e => set({ widthKm: WIDTHS[+e.target.value] }));
@@ -2076,7 +2098,7 @@ out tags center;`;
   document.getElementById("interval").addEventListener("change", e => set({ interval: e.target.value }));
   document.getElementById("smooth").addEventListener("input", e => set({ smooth: +e.target.value }));
   document.getElementById("waterSmooth").addEventListener("input", e => set({ waterSmooth: +e.target.value }));
-  [["lyGrid", "grid"], ["lyWater", "water"], ["lyPeaks", "peaks"], ["lyLabels", "labels"], ["lyTrails", "trails"], ["lyWaterNames", "waterNames"]].forEach(([id, k]) =>
+  [["lyGrid", "grid"], ["lyWater", "water"], ["lyPeaks", "peaks"], ["lyLabels", "labels"], ["lyTrails", "trails"], ["lyWaterNames", "waterNames"], ["lyPeakNames", "peakNames"], ["lyMainTrails", "mainTrails"]].forEach(([id, k]) =>
     document.getElementById(id).addEventListener("change", e => set({ [k]: e.target.checked })));
 
   // ---------- search ----------
