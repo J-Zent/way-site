@@ -1237,8 +1237,11 @@ out tags center;`;
       for (const a of areas) {
         // a piece cut by a tile edge belongs to something larger, so it qualifies sooner
         const ar = Math.abs(a.rs.reduce((s, r) => s + polyArea(r), 0));
-        // rivers are long and narrow: solid water reads as a river, hatching only scratches it
-        (!a.river && (ar >= BIG || (a.big && ar >= BIG / 4)) ? big : small).push(a.rs);
+        // Narrow water (rivers, however they are tagged) stays solid: hatching only scratches a thin channel.
+        // Average width of a strip is about 2 x area / perimeter; under ~3 hatch spacings it is too thin to hatch.
+        const per = a.rs.reduce((s, r) => s + r.reduce((q, pt, i) => q + Math.hypot(pt[0] - r[(i + 1) % r.length][0], pt[1] - r[(i + 1) % r.length][1]), 0), 0);
+        const narrow = per > 0 && 2 * ar / per < 15;
+        (!a.river && !narrow && (ar >= BIG || (a.big && ar >= BIG / 4)) ? big : small).push(a.rs);
       }
       // Real lines clipped to the water, not a repeating pattern: patterns leave seams where tiles meet.
       const gap = o.hatchGap || 5, wgt = o.hatchWidth || 1.6;
