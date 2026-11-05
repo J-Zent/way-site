@@ -513,10 +513,13 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
   const HARD_SAC = /^(demanding_mountain_hiking|alpine_hiking|demanding_alpine_hiking|difficult_alpine_hiking)$/;
   const FAINT = /^(bad|horrible|no)$/;
 
+  const spanKm = b => Math.max((b.north - b.south) * 111.32, (b.east - b.west) * 111.32 * Math.cos((b.north + b.south) / 2 * Math.PI / 180));
   function query(b) {
     const box = [b.south, b.west, b.north, b.east].map(v => (+v).toFixed(6)).join(",");
-    return `[out:json][timeout:25];
-way["highway"~"^(path|footway|track|bridleway)$"]["footway"!~"^(sidewalk|crossing)$"]["access"!~"^(private|no)$"](${box});
+    // big areas hold too many unnamed paths for the public servers: keep named ones only
+    const named = spanKm(b) > 25 ? `["name"]` : "";
+    return `[out:json][timeout:90];
+way["highway"~"^(path|footway|track|bridleway)$"]["footway"!~"^(sidewalk|crossing)$"]["access"!~"^(private|no)$"]${named}(${box});
 out body geom;`;
   }
 
@@ -593,7 +596,7 @@ out body geom;`;
     let lastErr;
     for (const url of opts.endpoints || ENDPOINTS) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs || 30000);
+      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs || 100000);
       const onOuterAbort = () => ctrl.abort();
       if (opts.signal) opts.signal.addEventListener("abort", onOuterAbort, { once: true });
       try {
@@ -907,7 +910,7 @@ out body geom;`;
   }
 
   root.Trails = { load, parse, render, query, overpass, STYLES,
-    util: { chain, rdp, chaikin, labelRun, sideLabel, length, d, esc, smoothLine, snapEnds } };
+    util: { chain, rdp, chaikin, labelRun, sideLabel, length, d, esc, smoothLine, snapEnds, spanKm } };
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
 <script>/*
@@ -950,9 +953,11 @@ out body geom;`;
     // sea names sit far from shore, so look for them in a wider box
     const dy = (b.north - b.south), dx = (b.east - b.west);
     const wide = [b.south - dy, b.west - dx, b.north + dy, b.east + dx].map(v => (+v).toFixed(6)).join(",");
-    return `[out:json][timeout:25];
+    // big areas: rivers and canals only, so the query stays small enough for the public servers
+    const flow = T.util.spanKm(b) > 25 ? "river|canal" : "river|stream|canal";
+    return `[out:json][timeout:90];
 (
-  way["waterway"~"^(river|stream|canal)$"](${box});
+  way["waterway"~"^(${flow})$"](${box});
   way["waterway"="riverbank"](${box});
   way["natural"="water"](${box});
   relation["natural"="water"](${box});
@@ -1883,12 +1888,12 @@ out body geom;`;
     if (state.trails && td) {
       if (td.status === "loading") trailNote = " Loading trails…";
       else if (td.status === "ok") trailNote = td.list.length ? ` ${td.list.length} trail lines from OpenStreetMap.` : " No trails mapped here.";
-      else trailNote = " Trails need OpenStreetMap, which this preview blocks.";
+      else trailNote = " Trails could not load (the map data server is busy or the area is too large). Try a smaller area, or search again in a minute.";
     }
     let waterNote = L.streams.length ? " Water lines are traced from the elevation data." : "";
     if (wd && wd.status === "loading") waterNote = " Loading water…";
     else if (osmWater) waterNote = " Water, coastline and names from OpenStreetMap.";
-    else if (wd && wd.status === "error" && (state.waterNames || !L.streams.length)) waterNote += " Real water needs OpenStreetMap, which this preview blocks.";
+    else if (wd && wd.status === "error") waterNote += " Water could not load (the map data server is busy or the area is too large). Try a smaller area, or search again in a minute.";
     document.getElementById("caption").textContent =
       `${L.source}. ${G.Pw.toFixed(0)} × ${G.Ph.toFixed(0)} mm at 1:${fmt(scale)}.${waterNote}${trailNote}`;
     syncControls(iv, widthM, G, cur.capped);
@@ -1989,6 +1994,8 @@ out body geom;`;
   const searchMsg = document.getElementById("searchMsg"), resultsEl = document.getElementById("results");
   function say(t, warn) { searchMsg.textContent = t || ""; searchMsg.classList.toggle("warn", !!warn); }
   function goLive(p, bboxKm) {
+    // a new search retries any water or trails that failed before
+    for (const m of [waterData, trailData]) for (const [k, v] of m) if (v.status === "error") m.delete(k);
     const patch = { place: { kind: "live", lat: p.lat, lon: p.lon, name: p.name, sub: p.sub }, title: "", subtitle: "" };
     if (bboxKm && bboxKm >= 2) patch.widthKm = WIDTHS.find(v => v >= bboxKm * 1.15) || WIDTHS[WIDTHS.length - 1];
     resultsEl.innerHTML = ""; say("");
