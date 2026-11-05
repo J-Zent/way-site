@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Maps · WAY.</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,7 +68,7 @@ header.top p { margin: 0; font-family: var(--mono); font-size: 12px; color: var(
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .search { display: flex; gap: 6px; }
-.field { width: 100%; min-width: 0; font: 500 13px var(--display); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 8px 9px; }
+.field { box-sizing: border-box; width: 100%; min-width: 0; font: 500 13px var(--display); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 8px 9px; }
 .field::placeholder { color: var(--muted); opacity: 0.85; }
 .go { font: 700 13px var(--display); background: var(--sel-bg); color: var(--sel-fg); border: 0; border-radius: 5px; padding: 0 14px; cursor: pointer; }
 .results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
@@ -132,7 +134,7 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
     <fieldset class="group">
       <legend>Place</legend>
       <form class="search" id="searchForm" role="search">
-        <input class="field" type="search" id="query" placeholder="Town, peak, park, or lat, lon" autocomplete="off" aria-label="Search for a place">
+        <input class="field" type="search" id="query" placeholder="Place or lat./long." autocomplete="off" aria-label="Search for a place">
         <button class="go" type="submit">Go</button>
       </form>
       <p class="msg" id="searchMsg" aria-live="polite"></p>
