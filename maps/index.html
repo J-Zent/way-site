@@ -100,6 +100,11 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 
 .actions { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
 .actions .btn { font: 700 14px var(--display); background: var(--sel-bg); color: var(--sel-fg); border: 0; border-radius: 5px; padding: 11px 12px; cursor: pointer; margin-top: 12px; }
+.actions .lab { margin-top: 14px; }
+.actions .hint { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 0; }
+.actions .btn[disabled] { opacity: 0.6; cursor: progress; }
+.linkbtn { font: 500 12px var(--mono); color: var(--muted); background: none; border: 0; padding: 2px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; }
+.linkbtn:hover { color: var(--fg); }
 .actions .note { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 0; min-height: 1.4em; }
 
 .stage { background: var(--stage); border-radius: 6px; padding: clamp(12px, 3vw, 36px); display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; }
@@ -189,8 +194,20 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
     </fieldset>
 
     <div class="actions">
-      <button class="btn" id="copySvg" type="button">Copy SVG</button>
-      <p class="note" id="copyNote" aria-live="polite">The SVG is set to the paper size, ready to print.</p>
+      <span class="lab">Download</span>
+      <div class="seg" id="fmtSeg" role="group" aria-label="File format">
+        <button type="button" data-fmt="pdf" aria-pressed="true">PDF</button>
+        <button type="button" data-fmt="png" aria-pressed="false">PNG</button>
+        <button type="button" data-fmt="svg" aria-pressed="false">SVG</button>
+      </div>
+      <div class="row" id="dpiRow" hidden>
+        <label for="dpi" class="lab" style="flex:0 0 auto">Resolution</label>
+        <select class="field" id="dpi"><option value="150">150 dpi · screen</option><option value="300" selected>300 dpi · print</option></select>
+      </div>
+      <p class="hint" id="fmtHint">Vector, sharp at any size. Best for printing.</p>
+      <button class="btn" id="download" type="button">Download PDF</button>
+      <button class="linkbtn" id="copySvg" type="button">Copy SVG to clipboard</button>
+      <p class="note" id="copyNote" aria-live="polite"></p>
     </div>
   </aside>
 
@@ -205,6 +222,7 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="/maps/omt.js"></script>
+<script src="/maps/export.js"></script>
 <script>/*
  * terrain.js — elevation for any place on Earth, ready for contouring.
  *
@@ -2128,20 +2146,49 @@ out tags center;`;
   sheetEl.addEventListener("pointerup", endDrag);
   sheetEl.addEventListener("pointercancel", () => { if (drag) { if (drag.pan) drag.pan.removeAttribute("transform"); drag = null; sheetEl.classList.remove("dragging"); } });
 
-  // ---------- copy ----------
-  document.getElementById("copySvg").addEventListener("click", () => {
+  // ---------- download and copy ----------
+  const HINTS = {
+    pdf: "Vector, sharp at any size. Best for printing.",
+    png: "An image, for sharing or screens.",
+    svg: "Vector, for editing in Illustrator, Figma or Inkscape."
+  };
+  let outFmt = "pdf";
+  const dlBtn = document.getElementById("download"), note = document.getElementById("copyNote");
+  document.querySelectorAll("#fmtSeg button").forEach(b => b.addEventListener("click", () => {
+    outFmt = b.dataset.fmt;
+    document.querySelectorAll("#fmtSeg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    document.getElementById("dpiRow").hidden = outFmt !== "png";
+    document.getElementById("fmtHint").textContent = HINTS[outFmt];
+    dlBtn.textContent = "Download " + outFmt.toUpperCase();
+    note.textContent = "";
+  }));
+  function fileName() {
+    const title = (state.title || (view && view.L && view.L.name) || "map");
+    return `${title}-${state.paper}-${state.orient}`;
+  }
+  dlBtn.addEventListener("click", async () => {
     const svgEl = document.querySelector("#sheet svg");
-    const note = document.getElementById("copyNote");
+    if (!svgEl) { note.textContent = "There's no map to download yet."; return; }
+    dlBtn.disabled = true;
+    try {
+      note.textContent = await MapExport.download(outFmt, svgEl, { name: fileName(), dpi: +document.getElementById("dpi").value, onStatus: m => note.textContent = m });
+    } catch (err) {
+      console.warn("[maps] download", err);
+      note.textContent = "Download failed: " + (err && err.message || err);
+    } finally { dlBtn.disabled = false; dlBtn.textContent = "Download " + outFmt.toUpperCase(); }
+  });
+  document.getElementById("copySvg").addEventListener("click", async () => {
+    const svgEl = document.querySelector("#sheet svg");
     if (!svgEl) { note.textContent = "There's no map to copy yet."; return; }
-    const svg = svgEl.outerHTML.replace(/ style="[^"]*transform[^"]*"/, "");
-    const ok = "SVG copied, sized to the paper. Paste it into Illustrator, Figma or a .svg file.";
-    const fallback = () => {
+    const svg = await MapExport.svgText(svgEl, false);
+    const ok = "SVG copied. Paste it into Illustrator or Figma.";
+    try { await navigator.clipboard.writeText(svg); note.textContent = ok; }
+    catch (e) {
       const ta = document.createElement("textarea"); ta.value = svg; ta.style.position = "fixed"; ta.style.opacity = "0";
       document.body.appendChild(ta); ta.select();
-      let done = false; try { done = document.execCommand("copy"); } catch (e) {}
-      ta.remove(); note.textContent = done ? ok : "Copy was blocked here. Try again from the full page view.";
-    };
-    try { navigator.clipboard.writeText(svg).then(() => { note.textContent = ok; }, fallback); } catch (e) { fallback(); }
+      let done = false; try { done = document.execCommand("copy"); } catch (x) {}
+      ta.remove(); note.textContent = done ? ok : "Copy was blocked by the browser. Use Download SVG instead.";
+    }
   });
 
   render();
