@@ -607,12 +607,13 @@ out body geom;`;
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body, signal: ctrl.signal
         });
-        if (!res.ok) throw new Error(`Map data server answered ${res.status}`);
+        if (!res.ok) { console.warn("[maps]", url, "answered", res.status); throw new Error(`Map data server answered ${res.status}`); }
         const json = await res.json();
         cache.set(q, json);
         return json;
       } catch (err) {
         if (opts.signal && opts.signal.aborted) throw err;
+        console.warn("[maps]", url, String(err && err.message || err));
         lastErr = err;
       } finally {
         clearTimeout(timer);
@@ -1523,6 +1524,7 @@ out tags center;`;
     osmFor = L.id;
     if (wantWater) waterData.set(L.id, { status: "loading" });
     if (wantTrails) trailData.set(L.id, { status: "loading", list: [] });
+    schedule();                                        // redraw now, so the pill says it's loading
     osmTimer = setTimeout(async () => {
       const ctrl = osmCtrl = new AbortController(), id = L.id;
       try {
@@ -1632,9 +1634,9 @@ out tags center;`;
       const wd0 = cur.L && waterData.get(cur.L.id), td0 = cur.L && trailData.get(cur.L.id);
       const busy = [wd0 && wd0.status === "loading" && "water", td0 && td0.status === "loading" && "trails"].filter(Boolean);
       const bad = [wd0 && wd0.status === "error" && "water", td0 && td0.status === "error" && "trails"].filter(Boolean);
+      const why = (wd0 && wd0.status === "error" && wd0.err) || (td0 && td0.status === "error" && td0.err);
       setStatus(cur.loading ? "Loading elevation…"
-        : busy.length ? `Loading ${busy.join(" and ")}…`
-        : bad.length ? `Couldn't load ${bad.join(" or ")}: ${(wd0 && wd0.err) || (td0 && td0.err)}.` : "");
+        : [bad.length && `Couldn't load ${bad.join(" or ")}: ${why}.`, busy.length && `Loading ${busy.join(" and ")}…`].filter(Boolean).join(" "));
     }
 
     const L = cur.L, V = cur.V, M = MODES[state.mode], A = ACCENTS[state.accent].c;
