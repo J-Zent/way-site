@@ -952,7 +952,8 @@ out body geom;`;
     const box = [b.south, b.west, b.north, b.east].map(v => (+v).toFixed(6)).join(",");
     // sea names sit far from shore, so look for them in a wider box
     const dy = (b.north - b.south), dx = (b.east - b.west);
-    const wide = [b.south - dy, b.west - dx, b.north + dy, b.east + dx].map(v => (+v).toFixed(6)).join(",");
+    const my = Math.min(dy, 0.15), mx = Math.min(dx, 0.2);   // at most ~15 km of margin
+    const wide = [b.south - my, b.west - mx, b.north + my, b.east + mx].map(v => (+v).toFixed(6)).join(",");
     // big areas: rivers and canals only, so the query stays small enough for the public servers
     const flow = T.util.spanKm(b) > 25 ? "river|canal" : "river|stream|canal";
     return `[out:json][timeout:90];
@@ -962,11 +963,14 @@ out body geom;`;
   way["natural"="water"](${box});
   relation["natural"="water"](${box});
   way["natural"="coastline"](${box});
+);
+out body geom;
+(
   node["place"~"^(ocean|sea)$"]["name"](${wide});
   node["natural"~"^(bay|strait)$"]["name"](${wide});
   way["natural"~"^(bay|strait)$"]["name"](${wide});
 );
-out body geom;`;
+out tags center;`;
   }
 
   // ---------- parsing ----------
@@ -1001,8 +1005,8 @@ out body geom;`;
       if (el.type === "node" && tags.name && (/^(ocean|sea)$/.test(tags.place || "") || /^(bay|strait)$/.test(tags.natural || ""))) {
         seaNames.push({ name: tags.name, lon: el.lon, lat: el.lat, bay: tags.natural === "bay",
           rank: tags.place === "ocean" ? 0 : tags.place === "sea" ? 1 : tags.natural === "strait" ? 2 : 3 });
-      } else if (el.type === "way" && /^(bay|strait)$/.test(tags.natural || "") && tags.name && geom) {
-        const c = geom.reduce((a, p) => [a[0] + p[0] / geom.length, a[1] + p[1] / geom.length], [0, 0]);
+      } else if (el.type === "way" && /^(bay|strait)$/.test(tags.natural || "") && tags.name && (geom || el.center)) {
+        const c = el.center ? [el.center.lon, el.center.lat] : geom.reduce((a, p) => [a[0] + p[0] / geom.length, a[1] + p[1] / geom.length], [0, 0]);
         seaNames.push({ name: tags.name, lon: c[0], lat: c[1], bay: tags.natural === "bay", rank: tags.natural === "strait" ? 2 : 3 });
       } else if (el.type === "way" && tags.natural === "coastline" && geom && geom.length > 1) {
         coast.push({ nodes: el.nodes || geom.map((_, i) => el.id + ":" + i), coords: geom });
@@ -1597,7 +1601,14 @@ out body geom;`;
       syncControls(null, null, G);
       return;
     }
-    setStatus(cur.loading ? "Loading elevation…" : "");
+    {
+      const wd0 = cur.L && waterData.get(cur.L.id), td0 = cur.L && trailData.get(cur.L.id);
+      const busy = [wd0 && wd0.status === "loading" && "water", td0 && td0.status === "loading" && "trails"].filter(Boolean);
+      const bad = [wd0 && wd0.status === "error" && "water", td0 && td0.status === "error" && "trails"].filter(Boolean);
+      setStatus(cur.loading ? "Loading elevation…"
+        : busy.length ? `Loading ${busy.join(" and ")}…`
+        : bad.length ? `Couldn't load ${bad.join(" or ")}. Try a smaller area or search again.` : "");
+    }
 
     const L = cur.L, V = cur.V, M = MODES[state.mode], A = ACCENTS[state.accent].c;
     const { VW, VH, mx, my, MW, MH } = G;
@@ -1742,6 +1753,8 @@ out body geom;`;
     parts.push(`<defs><clipPath id="mapclip"><rect x="${mx}" y="${my}" width="${f1(MW)}" height="${f1(MH)}"/></clipPath></defs>`);
     parts.push(`<rect width="${f1(VW)}" height="${f1(VH)}" fill="${M.bg}"/>`);
 
+    // everything inside the frame sits in one group, so dragging moves only the map, not the sheet
+    parts.push(`<g clip-path="url(#mapclip)"><g class="pan">`);
     // map body
     parts.push(`<g clip-path="url(#mapclip)" fill="none" stroke-linejoin="round" stroke-linecap="round">`);
     if (state.grid) {
@@ -1792,6 +1805,7 @@ out body geom;`;
       parts.push(`</g>`);
     }
 
+    parts.push(`</g></g>`);   // end of the panning map
     // neatline
     parts.push(`<rect x="${mx}" y="${my}" width="${f1(MW)}" height="${f1(MH)}" fill="none" stroke="${M.text}" stroke-width="1"/>`);
 
@@ -2048,14 +2062,14 @@ out body geom;`;
     if (!view || e.button !== 0) return;
     const svg = sheetEl.querySelector("svg");
     if (!svg) return;
-    drag = { x: e.clientX, y: e.clientY, svg, rect: svg.getBoundingClientRect(), moved: false };
+    drag = { x: e.clientX, y: e.clientY, svg, pan: svg.querySelector(".pan"), rect: svg.getBoundingClientRect(), moved: false };
     sheetEl.setPointerCapture(e.pointerId);
   });
   sheetEl.addEventListener("pointermove", e => {
     if (!drag) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (Math.hypot(dx, dy) > 3) { drag.moved = true; sheetEl.classList.add("dragging"); }
-    if (drag.moved) drag.svg.style.transform = `translate(${dx}px, ${dy}px)`;
+    if (drag.moved && drag.pan) { const k = view.VW / drag.rect.width; drag.pan.setAttribute("transform", `translate(${(dx * k).toFixed(1)} ${(dy * k).toFixed(1)})`); }
   });
   function endDrag(e) {
     if (!drag) return;
@@ -2073,7 +2087,7 @@ out body geom;`;
     }
   }
   sheetEl.addEventListener("pointerup", endDrag);
-  sheetEl.addEventListener("pointercancel", () => { if (drag) { drag.svg.style.transform = ""; drag = null; sheetEl.classList.remove("dragging"); } });
+  sheetEl.addEventListener("pointercancel", () => { if (drag) { if (drag.pan) drag.pan.removeAttribute("transform"); drag = null; sheetEl.classList.remove("dragging"); } });
 
   // ---------- copy ----------
   document.getElementById("copySvg").addEventListener("click", () => {
