@@ -520,7 +520,7 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
     const box = [b.south, b.west, b.north, b.east].map(v => (+v).toFixed(6)).join(",");
     // big areas hold too many unnamed paths for the public servers: keep named ones only
     const named = spanKm(b) > 25 ? `["name"]` : "";
-    return `[out:json][timeout:90];
+    return `[out:json][timeout:30];
 way["highway"~"^(path|footway|track|bridleway)$"]["footway"!~"^(sidewalk|crossing)$"]["access"!~"^(private|no)$"]${named}(${box});
 out body geom;`;
   }
@@ -598,7 +598,7 @@ out body geom;`;
     let lastErr;
     for (const url of opts.endpoints || ENDPOINTS) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs || 100000);
+      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs || 30000);
       const onOuterAbort = () => ctrl.abort();
       if (opts.signal) opts.signal.addEventListener("abort", onOuterAbort, { once: true });
       try {
@@ -957,12 +957,14 @@ out body geom;`;
     const my = Math.min(dy, 0.15), mx = Math.min(dx, 0.2);   // at most ~15 km of margin
     const wide = [b.south - my, b.west - mx, b.north + my, b.east + mx].map(v => (+v).toFixed(6)).join(",");
     // big areas: rivers and canals only, so the query stays small enough for the public servers
-    const flow = T.util.spanKm(b) > 25 ? "river|canal" : "river|stream|canal";
-    return `[out:json][timeout:90];
+    const big = T.util.spanKm(b) > 25;
+    const flow = big ? "river|canal" : "river|stream|canal";
+    const lakes = big ? `["name"]` : "";
+    return `[out:json][timeout:30];
 (
   way["waterway"~"^(${flow})$"](${box});
   way["waterway"="riverbank"](${box});
-  way["natural"="water"](${box});
+  way["natural"="water"]${lakes}(${box});
   relation["natural"="water"](${box});
   way["natural"="coastline"](${box});
 );
