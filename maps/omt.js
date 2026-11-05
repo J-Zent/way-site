@@ -232,6 +232,11 @@
     }));
 
     const areas = [], sea = [], shore = [], lines = [], trailPieces = [], namePieces = [], names = [];
+    // Rivers are mapped twice: a centre line and the outline of their banks. Past a few km across,
+    // the banks are only a millimetre or two apart on paper, and their raw outline wobbles against the
+    // smoothed centre line. There the centre line alone draws the river.
+    const spanKm = Math.max((bbox.north - bbox.south) * 111.32, (bbox.east - bbox.west) * 111.32 * Math.cos((bbox.north + bbox.south) / 2 * Math.PI / 180));
+    const riverBanks = spanKm <= (opts.riverBanksKm || 6);
     for (const t of results) {
       if (!t) continue;
       for (const [lname, L] of Object.entries(t.layers)) {
@@ -239,6 +244,7 @@
         for (const f of L.features) {
           const p = f.props;
           if (lname === "water" && f.type === 3) {
+            if (p.class === "river" && !riverBanks) continue;
             const isSea = SEA.test(p.class || ""), rings = [];
             for (const ring of f.rings) {
               const c = clipPolygonRing(ring, E);
