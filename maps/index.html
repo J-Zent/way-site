@@ -117,7 +117,6 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 .nav .swash, .aside .swash { left: -3px; right: -6px; width: calc(100% + 9px); bottom: -1px; height: 8px; }
 .nav a:hover .swash, .aside a:hover .swash, .nav a:focus-visible .swash, .aside a:focus-visible .swash { clip-path: inset(0 0 0 0); }
 .aside { justify-self: end; }
-.nav a[aria-current="page"] .swash { clip-path: inset(0 0 0 0); }
 @media (max-width: 640px) {
   .header { height: 112px; grid-template-columns: auto 1fr; gap: 16px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
   .nav { justify-self: end; gap: 18px; }
@@ -359,14 +358,16 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
   function findPeaks(z, w, h, cell, margin, keep = 9) {
     const zs = blur(z, w, h, 1.5);
     const r = Math.max(4, Math.min(20, Math.round(450 / cell)));
-    const mx = rankFilter(zs, w, h, r, true), mn = rankFilter(zs, w, h, r, false);
+    // the sea floor counts as sea level: a bump on the beach is not a summit just because the water beside it is deep
+    const zLand = zs.map(v => Math.max(0, v));
+    const mx = rankFilter(zs, w, h, r, true), mn = rankFilter(zLand, w, h, r, false);
     let lo = Infinity, hi = -Infinity;
     for (const v of zs) { if (v < lo) lo = v; if (v > hi) hi = v; }
     const drop = Math.max(25, (hi - lo) * 0.04);
     const cand = [];
     for (let y = margin; y < h - margin; y++) for (let x = margin; x < w - margin; x++) {
       const i = y * w + x;
-      if (zs[i] !== mx[i] || zs[i] - mn[i] < drop) continue;
+      if (zs[i] !== mx[i] || zs[i] - mn[i] < drop || zs[i] < 5) continue;
       let best = -Infinity, bx = x, by = y;
       for (let yy = y - 2; yy <= y + 2; yy++) for (let xx = x - 2; xx <= x + 2; xx++) {
         const v = z[yy * w + xx]; if (v > best) { best = v; bx = xx; by = yy; }
@@ -2036,7 +2037,8 @@ out tags center;`;
     entries.forEach(([k, label, html]) => {
       const b = document.createElement("button");
       b.type = "button"; b.className = "sw"; b.setAttribute("aria-pressed", String(k === cur));
-      b.innerHTML = `<span class="chipc">${html}</span><span>${label}</span>`;
+      b.innerHTML = el.id === "accentSw" ? `<span class="chipc">${html}</span>` : `<span class="chipc">${html}</span><span>${label}</span>`;
+      if (el.id === "accentSw") b.setAttribute("aria-label", label);
       b.addEventListener("click", () => onPick(k));
       el.appendChild(b);
     });
