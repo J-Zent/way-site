@@ -1501,22 +1501,45 @@ out tags center;`;
 
   // ---------- OpenStreetMap layers, per terrain ----------
   const waterData = new Map(), trailData = new Map();
-  function ensureWater(L) {
-    if (!(state.water || state.waterNames) || waterData.has(L.id) || !window.Water) return;
-    waterData.set(L.id, { status: "loading" });
-    Water.load(L.bbox)
-      .then(data => waterData.set(L.id, { status: "ok", data }))
-      .catch(err => waterData.set(L.id, { status: "error", err: String(err && err.message || err) }))
-      .finally(schedule);
+  // The free map servers allow only a couple of requests at a time from one visitor. So we ask
+  // only for the map that is showing, wait until the map has stopped moving, ask for water and
+  // trails one after the other, and cancel anything still running when the map moves on.
+  let osmFor = null, osmTimer = 0, osmCtrl = null;
+  function errText(err) {
+    const m = String(err && err.message || err);
+    if (/429/.test(m)) return "the map data servers are busy (too many requests). Wait a minute, then search again";
+    if (/abort|timed? ?out|504/i.test(m)) return "the map data servers took too long. Try a smaller area or search again";
+    if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return "the map data servers could not be reached";
+    return m;
   }
-  function ensureTrails(L) {
-    if (!state.trails || trailData.has(L.id) || !window.Trails) return;
-    trailData.set(L.id, { status: "loading", list: [] });
-    Trails.load(L.bbox)
-      .then(list => trailData.set(L.id, { status: "ok", list }))
-      .catch(err => trailData.set(L.id, { status: "error", list: [], err: String(err && err.message || err) }))
-      .finally(schedule);
+  function ensureOSM(L) {
+    const wantWater = (state.water || state.waterNames) && window.Water && !waterData.has(L.id);
+    const wantTrails = state.trails && window.Trails && !trailData.has(L.id);
+    if (osmFor === L.id) return;                       // already queued or running for this map
+    if (!wantWater && !wantTrails) return;
+    clearTimeout(osmTimer);
+    if (osmCtrl) osmCtrl.abort();                      // the map moved on: drop the old requests
+    for (const m of [waterData, trailData]) for (const [k, v] of m) if (v.status === "loading" && k !== L.id) m.delete(k);
+    osmFor = L.id;
+    if (wantWater) waterData.set(L.id, { status: "loading" });
+    if (wantTrails) trailData.set(L.id, { status: "loading", list: [] });
+    osmTimer = setTimeout(async () => {
+      const ctrl = osmCtrl = new AbortController(), id = L.id;
+      try {
+        if (wantWater) {
+          try { waterData.set(id, { status: "ok", data: await Water.load(L.bbox, { signal: ctrl.signal }) }); }
+          catch (err) { if (ctrl.signal.aborted) return; waterData.set(id, { status: "error", err: errText(err) }); }
+          schedule();
+        }
+        if (wantTrails) {
+          try { trailData.set(id, { status: "ok", list: await Trails.load(L.bbox, { signal: ctrl.signal }) }); }
+          catch (err) { if (ctrl.signal.aborted) return; trailData.set(id, { status: "error", list: [], err: errText(err) }); }
+          schedule();
+        }
+      } finally { if (osmFor === id) osmFor = null; if (osmCtrl === ctrl) osmCtrl = null; }
+    }, 700);
   }
+  const ensureWater = L => ensureOSM(L), ensureTrails = L => ensureOSM(L);
 
   // ---------- geometry helpers ----------
   function rdp(pts, eps, closed) {
@@ -1611,7 +1634,7 @@ out tags center;`;
       const bad = [wd0 && wd0.status === "error" && "water", td0 && td0.status === "error" && "trails"].filter(Boolean);
       setStatus(cur.loading ? "Loading elevation…"
         : busy.length ? `Loading ${busy.join(" and ")}…`
-        : bad.length ? `Couldn't load ${bad.join(" or ")}. Try a smaller area or search again.` : "");
+        : bad.length ? `Couldn't load ${bad.join(" or ")}: ${(wd0 && wd0.err) || (td0 && td0.err)}.` : "");
     }
 
     const L = cur.L, V = cur.V, M = MODES[state.mode], A = ACCENTS[state.accent].c;
