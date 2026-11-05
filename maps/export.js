@@ -99,6 +99,8 @@
   // svg2pdf draws text but not text set along a path, and not halos drawn under the letters.
   // So, from the live sheet, every letter is placed at its exact position, and haloed text is
   // split into a halo copy (stroke) under a plain copy (fill).
+  // svg2pdf strokes text without the sheet's scale, so halo widths are pre-scaled to match (set per export)
+  let textStrokeScale = 1;
   function flattenText(liveSvg, clone) {
     const live = liveSvg.querySelectorAll("text"), copies = clone.querySelectorAll("text");
     const NS = "http://www.w3.org/2000/svg";
@@ -110,7 +112,7 @@
       const base = { "font-family": "DM Mono", "font-size": cs.fontSize, "font-weight": cs.fontWeight, "font-style": cs.fontStyle };
       const halo = cs.paintOrder && /^stroke/.test(cs.paintOrder.trim()) && cs.stroke !== "none" && parseFloat(cs.strokeWidth) > 0;
       const layers = halo
-        ? [{ fill: "none", stroke: cs.stroke, "stroke-width": cs.strokeWidth, "stroke-opacity": cs.strokeOpacity, "stroke-linejoin": "round" },
+        ? [{ fill: "none", stroke: cs.stroke, "stroke-width": (parseFloat(cs.strokeWidth) * textStrokeScale).toFixed(3), "stroke-opacity": cs.strokeOpacity, "stroke-linejoin": "round" },
            { fill: cs.fill, "fill-opacity": cs.fillOpacity, stroke: "none" }]
         : [{ fill: cs.fill, "fill-opacity": cs.fillOpacity, stroke: "none" }];
       const chars = [];
@@ -147,6 +149,8 @@
     const pan = svg.querySelector(".pan"), old = pan && pan.getAttribute("transform");
     if (pan) pan.removeAttribute("transform");
     const clone = cleanClone(svg);
+    const vb = svg.viewBox.baseVal;
+    textStrokeScale = w / vb.width;          // millimetres per sheet unit
     try { flattenText(svg, clone); } finally { if (pan && old) pan.setAttribute("transform", old); }
     const holder = document.createElement("div");
     holder.style.cssText = "position:absolute;left:-99999px;top:0;width:10px;height:10px;overflow:hidden";
