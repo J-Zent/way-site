@@ -39,9 +39,9 @@ body {
 }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-fg); }
-/* ft/m and PDF/PNG/SVG: the chosen one turns lemonade */
-#unitSeg button, #fmtSeg button { transition: background-color .2s, color .2s; }
-#unitSeg button[aria-pressed="true"], #fmtSeg button[aria-pressed="true"] { background: var(--lemon); color: var(--ink); }
+/* Portrait/Landscape, ft/m and PDF/PNG/SVG: the chosen one turns lemonade */
+#orientSeg button, #unitSeg button, #fmtSeg button { transition: background-color .2s, color .2s; }
+#orientSeg button[aria-pressed="true"], #unitSeg button[aria-pressed="true"], #fmtSeg button[aria-pressed="true"] { background: var(--lemon); color: var(--ink); }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .search { display: flex; gap: 6px; }
