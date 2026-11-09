@@ -80,7 +80,10 @@ html.is-day .header { color: inherit; transition: none; } /* at sunrise the type
 /* ---- the words: everything that scrolls ---- */
 main { position: relative; z-index: 1; isolation: isolate; }
 .mark-word { height: calc(100svh - var(--ticker-h) - env(safe-area-inset-top, 0px)); min-height: 420px; display: grid; place-items: center; padding: var(--header-h) 24px 40px; }
-.wordmark { margin: 0; font: 400 clamp(64px, 17vw, 260px)/1 var(--mark); letter-spacing: -0.01em; white-space: nowrap; }
+.wordmark { margin: 0; font: 400 clamp(64px, 17vw, 260px)/1 var(--mark); letter-spacing: -0.01em; white-space: nowrap; cursor: default; }
+/* the flicker: hidden until its fonts are in, so the fallback font never shows */
+.js .wordmark { visibility: hidden; }
+.js .wordmark.is-on { visibility: visible; }
 .statement { max-width: 680px; margin: 0 auto; padding: clamp(80px, 16svh, 180px) 24px clamp(120px, 22svh, 240px); }
 .statement p { margin: 0; font: 400 clamp(19px, 2vw, 23px)/1.8 var(--body); text-wrap: pretty; }
 .statement .way { font-family: var(--mark); font-size: .86em; letter-spacing: 0; }
@@ -116,6 +119,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
 </style>
 </head>
 <body>
+<script>document.documentElement.classList.add('js')</script>
 
 <!-- the candle video goes here: drop the files in /img/mission/ and remove "hidden" (and add class="film has-video") -->
 <div class="film" aria-hidden="true">
@@ -165,6 +169,55 @@ main { position: relative; z-index: 1; isolation: isolate; }
 </main>
 
 <script>
+// The WAY. flicker: on arrival the word flashes through two dozen wild fonts, fast at first and slowing,
+// with two dark blinks like a candle guttering, then lands on the WAY. font and holds.
+// Tap or click the word to see it again. Each wild font is cut down to just the letters W, A, Y and "."
+// (a few KB each), and all of them load before it starts, so no step is skipped.
+(() => {
+  const word = document.querySelector('.wordmark'), glow = document.querySelector('.film__glow');
+  const FONTS = ['frijole', 'righteous', 'rubikwetpaint', 'sixtyfour', 'bigshouldersstencildisplay', 'wallpoet', 'anton', 'saira',
+    'librebarcode39text', 'majormonodisplay', 'monoton', 'fasterone', 'rubikglitch', 'playfairdisplay', 'lacquer', 'tiltprism',
+    'nosifer', 'bowlbyone', 'zentokyozoo', 'shrikhand', 'abrilfatface', 'trainone', 'rubikmicrobe', 'bungeeshade',
+    'monofett', 'bodonimoda', 'unifrakturmaguntia', 'pressstart2p'];
+  const N = 26;                                   // font changes before it lands
+  const land = () => { word.style.fontFamily = ''; word.style.fontSize = ''; word.style.opacity = ''; glow.style.opacity = ''; glow.style.animation = ''; word.classList.add('is-on'); };
+  // rapid flashing is what Reduce Motion is for, so those visitors get the word straight away
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { land(); return; }
+  const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`));
+  faces.forEach(f => document.fonts.add(f));
+  const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), ...faces.map(f => f.load().catch(() => null))]);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  let run = 0;
+  async function flicker() {
+    const id = ++run;
+    land();
+    const base = word.getBoundingClientRect();        // the landed size: every wild font is sized relative to it
+    const order = FONTS.slice().sort(() => Math.random() - 0.5);
+    word.style.opacity = '0'; glow.style.animation = 'none'; glow.style.opacity = '.6';
+    await wait(350);
+    for (let i = 0; i < N; i++) {
+      if (id !== run) return;
+      if (i === 9 || i === 17) {                       // a dark blink
+        word.style.opacity = '0'; glow.style.opacity = (.45 + Math.random() * .2).toFixed(2);
+        await wait(50);
+      }
+      word.style.fontFamily = `'flick-${order[i % order.length]}'`;
+      word.style.fontSize = '100px';
+      const r = word.getBoundingClientRect();
+      const k = Math.min(base.width * (0.8 + Math.random() * 0.4) / r.width, base.height * 1.5 / r.height, innerWidth * 0.92 / r.width);
+      word.style.fontSize = (100 * k).toFixed(1) + 'px';
+      word.style.opacity = '1';
+      glow.style.opacity = (.72 + Math.random() * .28).toFixed(2);   // the candle glow trembles with it
+      const t = i / (N - 1);
+      await wait(40 + 120 * t * t);                    // fast at first, slowing toward the landing
+    }
+    if (id === run) land();
+  }
+  // start once the fonts are in (or after 3 s at most, then just show the word)
+  Promise.race([ready, wait(3000).then(() => 'late')]).then(v => v === 'late' ? land() : flicker());
+  word.addEventListener('click', () => ready.then(flicker));
+})();
+
 // typewriter and swashes for the two Greek words: they type whenever they come into view, and reset at the top
 (() => {
   const els = [...document.querySelectorAll('[data-type]')];
