@@ -95,7 +95,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
   -webkit-mask: url("/img/draw/cloud-wide.svg") center / 100% 100% no-repeat; mask: url("/img/draw/cloud-wide.svg") center / 100% 100% no-repeat;
   animation: cloud-breathe 3.2s ease-in-out infinite;
 }
-@keyframes cloud-breathe { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.06, 1.1); opacity: 1; } }
+@keyframes cloud-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03, 1.05); } }
 .greek-part { padding: 0 max(24px, env(safe-area-inset-right, 0px)) clamp(140px, 24svh, 260px) max(24px, env(safe-area-inset-left, 0px)); }
 
 /* ---- the words in the shell ---- */
@@ -190,8 +190,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
     'monofett', 'bodonimoda', 'unifrakturmaguntia', 'pressstart2p'];
   const N = 26;                                   // font changes before it lands
   const land = () => { word.style.fontFamily = ''; word.style.fontSize = ''; word.style.opacity = ''; glow.style.opacity = ''; glow.style.animation = ''; word.classList.add('is-on'); };
-  // rapid flashing is what Reduce Motion is for, so those visitors get the word straight away
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { land(); return; }
+  // (it plays for everyone, Reduce Motion included, like the rest of the site's animations)
   const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`));
   faces.forEach(f => document.fonts.add(f));
   const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), ...faces.map(f => f.load().catch(() => null))]);
@@ -222,8 +221,8 @@ main { position: relative; z-index: 1; isolation: isolate; }
     }
     if (id === run) land();
   }
-  // start once the fonts are in (or after 3 s at most, then just show the word)
-  Promise.race([ready, wait(3000).then(() => 'late')]).then(v => v === 'late' ? land() : flicker());
+  // start once the fonts are in; on a slow connection wait up to 8 s, then just show the word
+  Promise.race([ready, wait(8000).then(() => 'late')]).then(v => v === 'late' ? land() : flicker());
   word.addEventListener('click', () => ready.then(flicker));
 })();
 
