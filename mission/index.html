@@ -87,6 +87,15 @@ main { position: relative; z-index: 1; isolation: isolate; }
 .statement { max-width: 680px; margin: 0 auto; padding: clamp(80px, 16svh, 180px) 24px clamp(120px, 22svh, 240px); }
 .statement p { margin: 0; font: 400 clamp(19px, 2vw, 23px)/1.8 var(--body); text-wrap: pretty; }
 .statement .way { font-family: var(--mark); font-size: 1.55em; line-height: 1; letter-spacing: 0; }   /* 1.8x the earlier size, so it stands out */
+/* "here I am." sits in a hand-drawn lemonade cloud that slowly breathes */
+.cloud { position: relative; display: inline-block; white-space: nowrap; margin: .45em .75em; }   /* room for the cloud, so it never crowds the words around it */
+.cloud::before {
+  content: ""; position: absolute; inset: -0.85em -0.95em -0.75em -0.9em; z-index: -1; pointer-events: none;
+  background: var(--lemon);
+  -webkit-mask: url("/img/draw/cloud-wide.svg") center / 100% 100% no-repeat; mask: url("/img/draw/cloud-wide.svg") center / 100% 100% no-repeat;
+  animation: cloud-breathe 3.2s ease-in-out infinite;
+}
+@keyframes cloud-breathe { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.06, 1.1); opacity: 1; } }
 .greek-part { padding: 0 max(24px, env(safe-area-inset-right, 0px)) clamp(140px, 24svh, 260px) max(24px, env(safe-area-inset-left, 0px)); }
 
 /* ---- the words in the shell ---- */
@@ -154,7 +163,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
   </section>
 
   <section class="statement" aria-label="Mission">
-    <p><span class="way">WAY.</span> exists as a reminder to live. Despite the fact that up to this point we have not ceased to live, it remains incredibly easy to forget the simple task of living. It is a reminder to so courageously say &ldquo;here I am.&rdquo; To first, prior to anything, live the reality of being beloved.</p>
+    <p><span class="way">WAY.</span> exists as a reminder to live. Despite the fact that up to this point we have not ceased to live, it remains incredibly easy to forget the simple task of living. It is a reminder to so courageously say <span class="cloud">&ldquo;here I am.&rdquo;</span> To first, prior to anything, live the reality of being beloved.</p>
   </section>
 
   <section class="greek-part" aria-labelledby="words-title">
