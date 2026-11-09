@@ -14,7 +14,7 @@
 /* Layout: a narrow control rail beside a large map sheet; stacks to one column on phones. */
 :root {
   --paper: #EEE8DC; --paper-c: #EEE8DC; --stone: #CFC8BA; --ink: #141414; --night: #0E0E0E;
-  --flame: #FF4B3E; --lemon: #FBD271; --ticker-h: 34px;
+  --flame: #FF4B3E; --lemon: #FBD271; --ink: #141414; --ticker-h: 34px;
   --bg: #0E0E0E; --panel: #141414; --fg: #EEE8DC; --muted: #9A968C; --line: #2A2A27; --stage: #121212;
   --focus: #FF4B3E; --sel-bg: #EEE8DC; --sel-fg: #0E0E0E; --warn: #FF8A7E;
   --display: "DM Mono", "Fira Mono", ui-monospace, Menlo, monospace;
@@ -39,6 +39,9 @@ body {
 }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+/* ft/m and PDF/PNG/SVG: the chosen one turns lemonade */
+#unitSeg button, #fmtSeg button { transition: background-color .2s, color .2s; }
+#unitSeg button[aria-pressed="true"], #fmtSeg button[aria-pressed="true"] { background: var(--lemon); color: var(--ink); }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .search { display: flex; gap: 6px; }
@@ -102,6 +105,8 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 .actions .btn { font: 700 14px var(--display); background: var(--sel-bg); color: var(--sel-fg); border: 0; border-radius: 5px; padding: 11px 12px; cursor: pointer; margin-top: 12px; }
 .actions .lab { margin-top: 14px; }
 .actions .hint { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 0; }
+.actions .btn { transition: background-color .2s; }
+.actions .btn:hover, .actions .btn:focus-visible, .actions .btn:active { background: var(--lemon); color: var(--ink); }   /* lemonade when pressed, like Go */
 .actions .btn[disabled] { opacity: 0.6; cursor: progress; }
 .linkbtn { font: 500 12px var(--mono); color: var(--muted); background: none; border: 0; padding: 2px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; }
 .linkbtn:hover { color: var(--fg); }
