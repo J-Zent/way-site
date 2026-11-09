@@ -105,8 +105,18 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 .actions .btn { font: 700 14px var(--display); background: var(--sel-bg); color: var(--sel-fg); border: 0; border-radius: 5px; padding: 11px 12px; cursor: pointer; margin-top: 12px; }
 .actions .lab { margin-top: 14px; }
 .actions .hint { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 0; }
-.actions .btn { transition: background-color .2s; }
-.actions .btn:hover, .actions .btn:focus-visible, .actions .btn:active { background: var(--lemon); color: var(--ink); }   /* lemonade when pressed, like Go */
+/* Download: flame hatching like the map's sea (45 degree lines, with a flame shoreline). The label gets a halo
+   of the ground colour that clears the lines around its letters, as water names do on the map.
+   On hover the black between the lines fills in lemonade. */
+.actions .btn {
+  --ground: var(--panel, #141414);
+  background-color: var(--ground); color: var(--fg);
+  background-image: repeating-linear-gradient(45deg, var(--flame) 0 1.6px, transparent 1.6px 6px);
+  border: 1.5px solid var(--flame);
+  -webkit-text-stroke: 7px var(--ground); paint-order: stroke fill;      /* the halo: a thick outline drawn under each letter */
+  transition: background-color .2s, color .2s, -webkit-text-stroke-color .2s;
+}
+.actions .btn:hover, .actions .btn:focus-visible, .actions .btn:active { --ground: var(--lemon); color: var(--ink); }
 .actions .btn[disabled] { opacity: 0.6; cursor: progress; }
 .linkbtn { font: 500 12px var(--mono); color: var(--muted); background: none; border: 0; padding: 2px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; }
 .linkbtn:hover { color: var(--fg); }
