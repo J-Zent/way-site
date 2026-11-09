@@ -44,7 +44,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .search { display: flex; gap: 6px; }
 .field { box-sizing: border-box; width: 100%; min-width: 0; font: 500 13px var(--display); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 8px 9px; }
 .field::placeholder { color: var(--muted); opacity: 0.85; }
-.go { font: 700 13px var(--display); background: var(--sel-bg); color: var(--sel-fg); border: 0; border-radius: 5px; padding: 0 14px; cursor: pointer; }
+/* Go: one of the hand-drawn arrows, in paper; it nudges forward and turns lemonade on hover */
+.go { flex: 0 0 62px; position: relative; background: none; border: 0; padding: 0; cursor: pointer; color: var(--fg); }
+.go::before {
+  content: ""; position: absolute; inset: 50% 9px auto 2px; height: 22px; transform: translateY(-50%);
+  background: currentColor; -webkit-mask: url("../img/draw/arrow-1.svg") center / contain no-repeat; mask: url("../img/draw/arrow-1.svg") center / contain no-repeat;
+  transition: transform .25s cubic-bezier(.3, .7, .3, 1), color .2s;
+}
+.go:hover, .go:focus-visible { color: var(--lemon); }
+.go:hover::before, .go:focus-visible::before { transform: translate(4px, -50%); }
+.go:active::before { transform: translate(7px, -50%); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
 .results:empty { display: none; }
 .results button { width: 100%; text-align: left; background: transparent; border: 0; color: var(--fg); padding: 8px 10px; cursor: pointer; font: 500 13px/1.3 var(--display); }
@@ -70,7 +80,23 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 .rangehead output { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
 .checks label { display: flex; gap: 7px; align-items: center; font-size: 13px; cursor: pointer; }
-.checks input { accent-color: var(--fg); width: 15px; height: 15px; margin: 0; }
+.checks label { position: relative; gap: 9px; }
+/* Hand-drawn checkboxes: an open box that gets scribbled in when it's on */
+.checks input { position: absolute; opacity: 0; width: 16px; height: 16px; margin: 0; pointer-events: none; }
+.checks .box { flex: 0 0 auto; position: relative; width: 14px; height: 14px; border: 1.5px solid var(--fg); border-radius: 2px 3px 2px 4px; transform: rotate(-1.5deg); }
+.checks label:nth-child(even) .box { transform: rotate(1.2deg); border-radius: 3px 2px 4px 2px; }
+.checks .box::after {
+  content: ""; position: absolute; inset: -2px -3px -2px -2px; background: var(--fg);
+  -webkit-mask: var(--scrib) center / contain no-repeat; mask: var(--scrib) center / contain no-repeat;
+  clip-path: inset(0 100% 0 0); transition: clip-path .3s cubic-bezier(.3, .7, .3, 1);
+}
+.checks label:nth-child(3n+1) .box { --scrib: url("../img/draw/scribble-1.svg"); }
+.checks label:nth-child(3n+2) .box { --scrib: url("../img/draw/scribble-2.svg"); }
+.checks label:nth-child(3n) .box { --scrib: url("../img/draw/scribble-3.svg"); }
+.checks input:checked + .box::after { clip-path: inset(0 0 0 0); }
+.checks label:hover .box { border-color: var(--lemon); }
+.checks input:focus-visible + .box { outline: 2px solid var(--focus); outline-offset: 3px; }
+.checks input:disabled + .box, .checks input:disabled ~ * { opacity: .45; }
 
 .actions { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
 .actions .btn { font: 700 14px var(--display); background: var(--sel-bg); color: var(--sel-fg); border: 0; border-radius: 5px; padding: 11px 12px; cursor: pointer; margin-top: 12px; }
@@ -155,7 +181,7 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
       <legend>Place</legend>
       <form class="search" id="searchForm" role="search">
         <input class="field" type="search" id="query" placeholder="Place or lat./long." autocomplete="off" aria-label="Search for a place">
-        <button class="go" type="submit">Go</button>
+        <button class="go" type="submit"><span class="vh">Go</span></button>
       </form>
       <p class="msg" id="searchMsg" aria-live="polite"></p>
       <ul class="results" id="results"></ul>
@@ -202,14 +228,14 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
     <fieldset class="group">
       <legend>Layers</legend>
       <div class="checks">
-        <label><input type="checkbox" id="lyGrid" checked> Grid</label>
-        <label><input type="checkbox" id="lyWater" checked> Water</label>
-        <label><input type="checkbox" id="lyPeaks" checked> Summits</label>
-        <label><input type="checkbox" id="lyLabels" checked> Labels</label>
-        <label><input type="checkbox" id="lyTrails" checked> Trails</label>
-        <label><input type="checkbox" id="lyPeakNames" checked> Summit names</label>
-        <label><input type="checkbox" id="lyMainTrails" checked> Main trails only</label>
-        <label><input type="checkbox" id="lyWaterNames" checked> Water names</label>
+        <label><input type="checkbox" id="lyGrid" checked><span class="box" aria-hidden="true"></span> Grid</label>
+        <label><input type="checkbox" id="lyWater" checked><span class="box" aria-hidden="true"></span> Water</label>
+        <label><input type="checkbox" id="lyPeaks" checked><span class="box" aria-hidden="true"></span> Summits</label>
+        <label><input type="checkbox" id="lyLabels" checked><span class="box" aria-hidden="true"></span> Labels</label>
+        <label><input type="checkbox" id="lyTrails" checked><span class="box" aria-hidden="true"></span> Trails</label>
+        <label><input type="checkbox" id="lyPeakNames" checked><span class="box" aria-hidden="true"></span> Summit names</label>
+        <label><input type="checkbox" id="lyMainTrails" checked><span class="box" aria-hidden="true"></span> Main trails only</label>
+        <label><input type="checkbox" id="lyWaterNames" checked><span class="box" aria-hidden="true"></span> Water names</label>
       </div>
     </fieldset>
 
@@ -426,14 +452,14 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 
   // ---------- build a grid for a place ----------
   // lat, lon: centre. widthM: ground width of the map frame in metres. aspect: frame height / width.
-  async function build({ lat, lon, widthM, aspect, cellsAcross = 440, marginM = 2000, signal, onProgress }) {
+  async function build({ lat, lon, widthM, aspect, cellsAcross = 440, marginM = 4000, signal, onProgress }) {
     const P = { zone: utmZone(lon), a: WGS84.a, rf: WGS84.rf, towgs84: [0, 0, 0], south: lat < 0 };
     const [cE, cN] = toUTM(lon, lat, P);
     const heightM = widthM * aspect;
     const cell = Math.max(widthM, heightM) / cellsAcross;
-    // extra ground around the frame (2 km; on small maps a third of the map, to keep them quick),
+    // extra ground around the frame (4 km; on small maps two-thirds of the map, to keep them quick),
     // so a dragged map is never blank
-    const pad = Math.max(5, Math.round(Math.min(marginM, 0.35 * Math.max(widthM, heightM)) / cell));
+    const pad = Math.max(5, Math.round(Math.min(marginM, 0.7 * Math.max(widthM, heightM)) / cell));
     const vw = Math.round(widthM / cell), vh = Math.round(heightM / cell);
     const w = vw + 2 * pad, h = vh + 2 * pad;
     const x0 = cE - (w / 2) * cell, y0 = cN + (h / 2) * cell;
