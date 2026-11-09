@@ -231,6 +231,7 @@
       return { x, y, layers };
     }));
 
+    const cuts = new Map();   // tile-edge cuts of lake pieces, to join the pieces of one lake again
     const areas = [], sea = [], shore = [], lines = [], trailPieces = [], namePieces = [], names = [], peaks = [];
     // Rivers are mapped twice: a centre line and the outline of their banks. Past a few km across,
     // the banks are only a millimetre or two apart on paper, and their raw outline wobbles against the
@@ -244,7 +245,7 @@
         for (const f of L.features) {
           const p = f.props;
           if (lname === "water" && f.type === 3) {
-            const isSea = SEA.test(p.class || ""), rings = [];
+            const isSea = SEA.test(p.class || ""), rings = [], own = [], idx = areas.length;
             for (const ring of f.rings) {
               const c = clipPolygonRing(ring, E);
               if (!c) continue;
@@ -253,17 +254,30 @@
               let run = [];
               for (let i = 0; i < c.length; i++) {
                 const a = c[i], b = c[(i + 1) % c.length];
-                if (sameEdge(a, b, E)) { if (run.length > 1) shore.push(run.map(ll)); run = []; continue; }
+                if (sameEdge(a, b, E)) {
+                  if (run.length > 1) own.push(run.map(ll)); run = [];
+                  // remember the cut in whole-world tile units, so the neighbour's matching cut can find it
+                  if (!isSea) {
+                    const vert = Math.abs(a[0] - b[0]) < 0.02;
+                    const line = vert ? Math.round((t.x * E + a[0]) * 4) : Math.round((t.y * E + a[1]) * 4);
+                    const off = vert ? t.y * E : t.x * E, k = vert ? 1 : 0;
+                    const key = (vert ? "v" : "h") + line;
+                    if (!cuts.has(key)) cuts.set(key, []);
+                    cuts.get(key).push([idx, off + Math.min(a[k], b[k]), off + Math.max(a[k], b[k])]);
+                  }
+                  continue;
+                }
                 if (!run.length) run.push(a);
                 run.push(b);
               }
-              if (run.length > 1) shore.push(run.map(ll));
+              if (run.length > 1) own.push(run.map(ll));
             }
+            shore.push(...own);
             if (!rings.length) continue;
             // continues into a neighbouring tile, or a sea: treat as big water (hatched)
             const crosses = f.rings.some(r => r.some(q => q[0] < 0 || q[0] > E || q[1] < 0 || q[1] > E));
             if (isSea) sea.push(...rings);
-            else areas.push({ id: "omt", name: "", river: p.class === "river", outer: rings, inner: [], big: crosses, seasonal: !!p.intermittent });
+            else areas.push({ id: "omt", name: "", river: p.class === "river", outer: rings, inner: [], big: crosses, seasonal: !!p.intermittent, shore: own, cut: crosses });
           } else if (lname === "waterway" && f.type === 2 && WATERWAY.test(p.class || "")) {
             for (const line of f.rings) for (const piece of clipLine(line, E))
               lines.push({ group: (p.class) + "|" + (p.name || ""), kind: p.class, name: p.name || "", seasonal: !!p.intermittent, coords: piece.map(ll) });
@@ -290,6 +304,26 @@
         }
       }
     }
+
+    // A lake that crosses tile edges arrives as one piece per tile. Pieces whose cuts meet along the
+    // same tile edge are one lake: give them a shared body number, so the map judges the whole lake
+    // (big or small, wide or narrow) and never hatches one half and fills the other.
+    const parent = areas.map((_, i) => i);
+    const find = i => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
+    for (const list of cuts.values()) {
+      for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+        const A = list[i], B = list[j];
+        if (A[0] !== B[0] && Math.min(A[2], B[2]) - Math.max(A[1], B[1]) > 0.5) parent[find(A[0])] = find(B[0]);
+      }
+    }
+    areas.forEach((a, i) => { a.body = find(i); });
+    // a body whose cuts all found a neighbour lies wholly inside the loaded area
+    const matched = new Set();
+    for (const list of cuts.values()) for (let i = 0; i < list.length; i++) for (let j = 0; j < list.length; j++)
+      if (i !== j && list[i][0] !== list[j][0] && Math.min(list[i][2], list[j][2]) - Math.max(list[i][1], list[j][1]) > 0.5) matched.add(i + "|" + list[i][0] + "|" + list[i][1]);
+    const open = new Set();
+    for (const list of cuts.values()) for (let i = 0; i < list.length; i++) if (!matched.has(i + "|" + list[i][0] + "|" + list[i][1])) open.add(find(list[i][0]));
+    areas.forEach(a => { a.big = open.has(a.body); });
 
     // names: seas and bays become sea labels; lake names go to the lake piece that holds them
     const seaNames = [];

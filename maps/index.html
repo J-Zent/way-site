@@ -426,12 +426,14 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 
   // ---------- build a grid for a place ----------
   // lat, lon: centre. widthM: ground width of the map frame in metres. aspect: frame height / width.
-  async function build({ lat, lon, widthM, aspect, cellsAcross = 440, signal, onProgress }) {
+  async function build({ lat, lon, widthM, aspect, cellsAcross = 440, marginM = 2000, signal, onProgress }) {
     const P = { zone: utmZone(lon), a: WGS84.a, rf: WGS84.rf, towgs84: [0, 0, 0], south: lat < 0 };
     const [cE, cN] = toUTM(lon, lat, P);
     const heightM = widthM * aspect;
     const cell = Math.max(widthM, heightM) / cellsAcross;
-    const pad = 5;                                     // extra cells around the frame
+    // extra ground around the frame (2 km; on small maps a third of the map, to keep them quick),
+    // so a dragged map is never blank
+    const pad = Math.max(5, Math.round(Math.min(marginM, 0.35 * Math.max(widthM, heightM)) / cell));
     const vw = Math.round(widthM / cell), vh = Math.round(heightM / cell);
     const w = vw + 2 * pad, h = vh + 2 * pad;
     const x0 = cE - (w / 2) * cell, y0 = cN + (h / 2) * cell;
@@ -485,9 +487,9 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
     }
     for (let i = 0; i < z.length; i++) if (!Number.isFinite(z[i])) z[i] = 0;
 
-    // elevation range of the frame, ignoring sea-floor depths when there is land
+    // elevation range of the whole grid (margin too, so contours reach into it), ignoring sea-floor depths when there is land
     let lo = Infinity, hi = -Infinity, loAny = Infinity;
-    for (let r = pad; r < h - pad; r++) for (let c = pad; c < w - pad; c++) {
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
       const v = z[r * w + c];
       if (v > hi) hi = v;
       if (v < loAny) loAny = v;
@@ -497,13 +499,16 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
 
     const corners = [[pad, pad], [w - pad, pad], [pad, h - pad], [w - pad, h - pad]]
       .map(([c, r]) => fromUTM(x0 + c * cell, y0 - r * cell, P));
-    const bbox = {
-      south: Math.min(...corners.map(c => c[1])), north: Math.max(...corners.map(c => c[1])),
-      west: Math.min(...corners.map(c => c[0])), east: Math.max(...corners.map(c => c[0]))
-    };
+    const boxOf = cs => ({
+      south: Math.min(...cs.map(c => c[1])), north: Math.max(...cs.map(c => c[1])),
+      west: Math.min(...cs.map(c => c[0])), east: Math.max(...cs.map(c => c[0]))
+    });
+    const bbox = boxOf(corners);
+    // the whole grid, margin included: vector tiles are cheap, so water and trails cover it all
+    const bboxAll = boxOf([[1, 1], [w - 1, 1], [1, h - 1], [w - 1, h - 1]].map(([c, r]) => fromUTM(x0 + c * cell, y0 - r * cell, P)));
 
     return {
-      w, h, cell, x0, y0, z, lo, hi, proj: P, lat, lon, bbox,
+      w, h, cell, x0, y0, z, lo, hi, proj: P, lat, lon, bbox, bboxAll, pad,
       view: { gx0: pad, gy0: pad, gw: vw, gh: vh },
       peaks: findPeaks(z, w, h, cell, pad + 3),
       zoom, tiles: list.length
@@ -1270,15 +1275,29 @@ out tags center;`;
       const BIG = o.hatchMin || 600;
       const big = [], small = [];
       if (sea.length) big.push(sea);
-      for (const a of areas) {
-        // a piece cut by a tile edge belongs to something larger, so it qualifies sooner
+      // Judge each lake as a whole: a lake cut into pieces by tile edges is summed over its pieces,
+      // and only its real shore counts as perimeter (the cuts between tiles are not shoreline).
+      const ringLen = (r, closed) => r.reduce((q, pt, i) => (!closed && i === r.length - 1) ? q
+        : q + Math.hypot(pt[0] - r[(i + 1) % r.length][0], pt[1] - r[(i + 1) % r.length][1]), 0);
+      const bodies = new Map();
+      areas.forEach((a, i) => {
+        const key = a.body == null ? "solo" + i : "b" + a.body;
         const ar = Math.abs(a.rs.reduce((s, r) => s + polyArea(r), 0));
+        const per = a.shore ? a.shore.reduce((s, l) => s + ringLen(l.map(c => project(c[0], c[1])), false), 0) : a.rs.reduce((s, r) => s + ringLen(r, true), 0);
+        const B = bodies.get(key) || { ar: 0, per: 0, river: false, big: false, list: [] };
+        B.ar += ar; B.per += per; B.river = B.river || a.river; B.big = B.big || a.big; B.list.push(a);
+        bodies.set(key, B);
+      });
+      for (const B of bodies.values()) {
         // Narrow water (rivers, however they are tagged) stays solid: hatching only scratches a thin channel.
         // Average width of a strip is about 2 x area / perimeter; under ~3 hatch spacings it is too thin to hatch.
-        const per = a.rs.reduce((s, r) => s + r.reduce((q, pt, i) => q + Math.hypot(pt[0] - r[(i + 1) % r.length][0], pt[1] - r[(i + 1) % r.length][1]), 0), 0);
-        const narrow = per > 0 && 2 * ar / per < 15;
-        if (narrow) { a.river = true; a.width = 2 * ar / per; }
-        (!a.river && !narrow && (ar >= BIG || (a.big && ar >= BIG / 4)) ? big : small).push(a.rs);
+        const narrow = B.per > 0 && 2 * B.ar / B.per < 15;
+        // a lake running on past the loaded area belongs to something larger, so it qualifies sooner
+        const hatch = !B.river && !narrow && (B.ar >= BIG || (B.big && B.ar >= BIG / 4));
+        for (const a of B.list) {
+          if (narrow) { a.river = true; a.width = 2 * B.ar / B.per; }
+          (hatch ? big : small).push(a.rs);
+        }
       }
       // Real lines clipped to the water, not a repeating pattern: patterns leave seams where tiles meet.
       const gap = o.hatchGap || 5, wgt = o.hatchWidth || 1.6;
@@ -1286,9 +1305,11 @@ out tags center;`;
       const cid = prefix + "-hclip";
       let s = "";
       if (big.length && b) {
-        const step = gap * Math.SQRT2, H = b.y1 - b.y0;   // perpendicular spacing = gap
-        let lines = "";
-        for (let c = b.x0 - H - step; c <= b.x1 + step; c += step) lines += `M${c.toFixed(1)} ${b.y1.toFixed(1)}L${(c + H).toFixed(1)} ${b.y0.toFixed(1)}`;
+        const hb = o.hatchBounds || b;                       // the frame, or frame plus margin while on screen
+        const step = gap * Math.SQRT2, H = hb.y1 - hb.y0;  // perpendicular spacing = gap
+        // anchored to the frame corner, so the hatching lines up the same with or without the margin
+        let lines = "", c = b.x0 - Math.ceil((b.x0 - (hb.x0 - H - step)) / step) * step;
+        for (; c <= hb.x1 + step; c += step) lines += `M${c.toFixed(1)} ${hb.y1.toFixed(1)}L${(c + H).toFixed(1)} ${hb.y0.toFixed(1)}`;
         s += `<defs><clipPath id="${cid}">${big.map(rs => `<path d="${rs.map(r => d(r) + "Z").join("")}" clip-rule="evenodd"/>`).join("")}</clipPath></defs>`;
         // paper underneath first, so contours and seafloor detail never show through the hatching
         s += `<g${clip}><g fill="${halo}" stroke="none">${big.map(pd).join("")}</g>`;
@@ -1520,13 +1541,26 @@ out tags center;`;
       onProgress: f => { entry.progress = f; setStatus(`Loading elevation · ${Math.round(f * 100)}%`); } })
       .then(t => {
         entry.status = "ok";
-        entry.L = { ...t, id: "live:" + key, name: p.name, sub: p.sub || "", streams: [],
+        entry.L = { ...t, id: "live:" + key, name: p.name, sub: p.sub || "", streams: [], widthKm: state.widthKm, aspect: G.aspect,
           source: "Elevation from AWS Terrain Tiles (USGS 3DEP, SRTM and other public sources)", srcShort: "ELEVATION: AWS TERRAIN TILES" };
         lastLive = entry.L;
       })
       .catch(err => { entry.status = "error"; entry.err = String(err && err.message || err); })
       .finally(schedule);
     return entry;
+  }
+
+  // The window of an already loaded grid centred on the current place, if the place, size and
+  // paper shape still match and the frame keeps at least keep x the margin on every side.
+  function slideWindow(L, G, keep) {
+    const p = state.place;
+    if (!L || L.widthKm !== state.widthKm || Math.abs(L.aspect - G.aspect) > 1e-3 || L.name !== p.name || L.sub !== (p.sub || "")) return null;
+    const [E, N] = Terrain.toUTM(p.lon, p.lat, L.proj);
+    const { gw, gh } = L.view, m = Math.max(1, L.pad * keep);
+    const gx0 = (E - L.x0) / L.cell - gw / 2, gy0 = (L.y0 - N) / L.cell - gh / 2;
+    if (keep > 0 && (gx0 < m || gy0 < m || gx0 + gw > L.w - m || gy0 + gh > L.h - m)) return null;
+    // while a new grid loads, show as much as the old one reaches
+    return { L, V: { gx0: Math.min(Math.max(1, gx0), L.w - 1 - gw), gy0: Math.min(Math.max(1, gy0), L.h - 1 - gh), gw, gh } };
   }
 
   // The terrain to draw and the window of it the frame shows (in grid cells).
@@ -1540,9 +1574,13 @@ out tags center;`;
       const gx0 = Math.min(Math.max(1, cx - gw / 2), L.w - 1 - gw), gy0 = Math.min(Math.max(1, cy - gh / 2), L.h - 1 - gh);
       return { L, V: { gx0, gy0, gw, gh }, capped: gw < state.widthKm * 1000 / L.cell - 0.5 };
     }
+    // A drag that stays inside the loaded margin just slides the window over the grid we have:
+    // no new download, and contours, water and trails are already there.
+    const slid = slideWindow(lastLive, G, 0.3);
+    if (slid && !liveCache.has(liveKey(G))) return slid;
     const entry = ensureLive(G);
     if (entry.status === "ok") return { L: entry.L, V: entry.L.view };
-    if (entry.status === "loading") return { L: lastLive, V: lastLive && lastLive.view, loading: true };
+    if (entry.status === "loading") return { L: lastLive, V: lastLive && (slideWindow(lastLive, G, 0) || {}).V || (lastLive && lastLive.view), loading: true };
     return { L: null, error: entry.err };
   }
 
@@ -1576,7 +1614,7 @@ out tags center;`;
       // first choice: ready-made vector tiles (fast, one download for water and trails together)
       if (window.OMT) {
         try {
-          const r = await OMT.load(L.bbox, { signal: ctrl.signal });
+          const r = await OMT.load(L.bboxAll || L.bbox, { signal: ctrl.signal, maxTiles: 320 });
           if (wantWater) waterData.set(id, { status: "ok", data: r.water, source: "omt" });
           if (wantTrails) trailData.set(id, { status: "ok", list: r.trails, source: "omt" });
           if (osmFor === id) osmFor = null; if (osmCtrl === ctrl) osmCtrl = null;
@@ -1674,6 +1712,10 @@ out tags center;`;
 
   // ---------- render ----------
   let view = null;   // what the last render drew, for panning
+  // On screen the map is drawn past the frame into the loaded margin, so a drag shows real map,
+  // not blank paper. Downloads switch this off and get only what is inside the frame.
+  let drawMargin = true;
+  let lastWaterOk = null, lastTrailsOk = null;   // shown while a new area's water and trails load
   function render() {
     const G = sheetGeom();
     const cur = currentTerrain(G);
@@ -1745,7 +1787,7 @@ out tags center;`;
     }
 
     // only rings that touch the frame
-    const inFrame = r => r.some(p => p[0] >= V.gx0 - 1 && p[0] <= V.gx0 + V.gw + 1 && p[1] >= V.gy0 - 1 && p[1] <= V.gy0 + V.gh + 1);
+    const inFrame = r => drawMargin || r.some(p => p[0] >= V.gx0 - 1 && p[0] <= V.gx0 + V.gw + 1 && p[1] >= V.gy0 - 1 && p[1] <= V.gy0 + V.gh + 1);
     const parts = [];
     const svgPts = r => r.map(p => [X(p[0]), Y(p[1])]);
     let minor = "", index = "";
@@ -1765,6 +1807,14 @@ out tags center;`;
     const vx = [], hy = [];
     for (let x = Math.ceil(ext.x0 / sp) * sp; x < ext.x1; x += sp) vx.push(ux(x));
     for (let y = Math.floor(ext.yTop / sp) * sp; y > ext.yBot; y -= sp) hy.push(uy(y));
+    // drawing area: the frame, or the whole loaded grid while on screen
+    const xr = drawMargin
+      ? { x0: Math.min(mx, X(1)), y0: Math.min(my, Y(1)), x1: Math.max(mx + MW, X(L.w - 1)), y1: Math.max(my + MH, Y(L.h - 1)) }
+      : { x0: mx, y0: my, x1: mx + MW, y1: my + MH };
+    const gvx = [], ghy = [];
+    for (let x = Math.ceil((L.x0 + L.cell) / sp) * sp; ux(x) < xr.x1; x += sp) if (ux(x) > xr.x0) gvx.push(ux(x));
+    for (let y = Math.floor((L.y0 - L.cell) / sp) * sp; uy(y) < xr.y1; y -= sp) if (uy(y) > xr.y0) ghy.push(uy(y));
+    const innerClip = drawMargin ? "mapclipx" : "mapclip";
 
     // summits (kept well apart on the sheet)
     const pk = [];
@@ -1823,13 +1873,14 @@ out tags center;`;
     const frame = { x0: mx, x1: mx + MW, y0: my, y1: my + MH };
     const project = (lon, lat) => { const [ex, ny] = Terrain.toUTM(lon, lat, L.proj); return [ux(ex), uy(ny)]; };
     ensureWater(L);
-    const wd = waterData.get(L.id);
+    let wd = waterData.get(L.id);
+    if (wd && wd.status === "ok") lastWaterOk = wd; else if (wd && wd.status === "loading" && lastWaterOk) wd = lastWaterOk;
     const osmWater = wd && wd.status === "ok" && (wd.data.lines.length || wd.data.areas.length || wd.data.coast.length || (wd.data.sea && wd.data.sea.length));
     const baseAvoid = labels.map(l => ({ x: l.x, y: l.y })).concat(pk.map(p => ({ x: p.x + 20, y: p.y })));
     const waterPlaced = [];
     const wout = osmWater ? Water.render(wd.data, {
       project, color: M.water, areaColor: M.area || M.water, halo: M.bg, paper: C.paper, hatch: true, names: state.waterNames, smooth: state.waterSmooth,
-      bounds: frame, avoid: baseAvoid, placedOut: waterPlaced
+      bounds: frame, hatchBounds: xr, avoid: baseAvoid, placedOut: waterPlaced
     }) : null;
     if (wout && state.water) for (let i = labels.length - 1; i >= 0; i--) if (Water.onWater(wout, labels[i].x, labels[i].y)) labels.splice(i, 1);
     let water = "";
@@ -1854,17 +1905,18 @@ out tags center;`;
     const scale = roundSig(widthM * 1000 / mapWidthMm, 2);
 
     parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${f1(G.Pw)}mm" height="${f1(G.Ph)}mm" viewBox="0 0 ${f1(VW)} ${f1(VH)}" font-family="DM Mono, ui-monospace, monospace">`);
-    parts.push(`<defs><clipPath id="mapclip"><rect x="${mx}" y="${my}" width="${f1(MW)}" height="${f1(MH)}"/></clipPath></defs>`);
+    parts.push(`<defs><clipPath id="mapclip"><rect x="${mx}" y="${my}" width="${f1(MW)}" height="${f1(MH)}"/></clipPath>`
+      + (drawMargin ? `<clipPath id="mapclipx"><rect x="${f1(xr.x0)}" y="${f1(xr.y0)}" width="${f1(xr.x1 - xr.x0)}" height="${f1(xr.y1 - xr.y0)}"/></clipPath>` : "") + `</defs>`);
     parts.push(`<rect width="${f1(VW)}" height="${f1(VH)}" fill="${M.bg}"/>`);
 
     // everything inside the frame sits in one group, so dragging moves only the map, not the sheet
     parts.push(`<g clip-path="url(#mapclip)"><g class="pan">`);
     // map body
-    parts.push(`<g clip-path="url(#mapclip)" fill="none" stroke-linejoin="round" stroke-linecap="round">`);
+    parts.push(`<g clip-path="url(#${innerClip})" fill="none" stroke-linejoin="round" stroke-linecap="round">`);
     if (state.grid) {
       let g = "";
-      vx.forEach(x => g += `M${f1(x)} ${my}V${f1(my + MH)}`);
-      hy.forEach(y => g += `M${mx} ${f1(y)}H${f1(mx + MW)}`);
+      gvx.forEach(x => g += `M${f1(x)} ${f1(xr.y0)}V${f1(xr.y1)}`);
+      ghy.forEach(y => g += `M${f1(xr.x0)} ${f1(y)}H${f1(xr.x1)}`);
       parts.push(`<path d="${g}" stroke="${M.grid}" stroke-opacity="${M.gridOp}" stroke-width="0.7" stroke-dasharray="9 6"/>`);
     }
     parts.push(`<path d="${minor}" stroke="${M.minor}" stroke-opacity="${M.minorOp}" stroke-width="${M.wMinor}"/>`);
@@ -1876,17 +1928,18 @@ out tags center;`;
 
     // trails
     ensureTrails(L);
-    const td = trailData.get(L.id);
+    let td = trailData.get(L.id);
+    if (td && td.status === "ok") lastTrailsOk = td; else if (td && td.status === "loading" && lastTrailsOk) td = lastTrailsOk;
     const showTrails = state.trails && td && td.status === "ok" && td.list.length > 0;
     if (showTrails) {
       parts.push(Trails.render(td.list, {
-        project, color: A, halo: M.bg, clipId: "mapclip", labels: state.labels, mainOnly: state.mainTrails,
+        project, color: A, halo: M.bg, clipId: innerClip, labels: state.labels, mainOnly: state.mainTrails,
         bounds: frame, avoid: baseAvoid.concat(waterPlaced)
       }));
     }
 
     // water names go above the trails, so trail halos never cut into them
-    if (wout && state.waterNames) parts.push(`<g clip-path="url(#mapclip)">${wout.labels}</g>`);
+    if (wout && state.waterNames) parts.push(`<g clip-path="url(#${innerClip})">${wout.labels}</g>`);
 
     // contour labels with paper-coloured knockout
     if (labels.length) {
@@ -2214,17 +2267,20 @@ out tags center;`;
     const svgEl = document.querySelector("#sheet svg");
     if (!svgEl) { note.textContent = "There's no map to download yet."; return; }
     dlBtn.disabled = true;
+    drawMargin = false; render();                      // only what's inside the frame goes in the file
     try {
-      note.textContent = await MapExport.download(outFmt, svgEl, { name: fileName(), dpi: +document.getElementById("dpi").value, onStatus: m => note.textContent = m });
+      note.textContent = await MapExport.download(outFmt, document.querySelector("#sheet svg"), { name: fileName(), dpi: +document.getElementById("dpi").value, onStatus: m => note.textContent = m });
     } catch (err) {
       console.warn("[maps] download", err);
       note.textContent = "Download failed: " + (err && err.message || err);
-    } finally { dlBtn.disabled = false; dlBtn.textContent = "Download " + outFmt.toUpperCase(); }
+    } finally { drawMargin = true; render(); dlBtn.disabled = false; dlBtn.textContent = "Download " + outFmt.toUpperCase(); }
   });
   document.getElementById("copySvg").addEventListener("click", async () => {
     const svgEl = document.querySelector("#sheet svg");
     if (!svgEl) { note.textContent = "There's no map to copy yet."; return; }
-    const svg = await MapExport.svgText(svgEl, false);
+    drawMargin = false; render();
+    const svg = await MapExport.svgText(document.querySelector("#sheet svg"), false);
+    drawMargin = true; render();
     const ok = "SVG copied. Paste it into Illustrator or Figma.";
     try { await navigator.clipboard.writeText(svg); note.textContent = ok; }
     catch (e) {
@@ -2234,6 +2290,7 @@ out tags center;`;
       ta.remove(); note.textContent = done ? ok : "Copy was blocked by the browser. Use Download SVG instead.";
     }
   });
+
 
   render();
 })();
