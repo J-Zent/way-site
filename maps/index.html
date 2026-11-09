@@ -112,7 +112,7 @@ input[type="range"] { width: 100%; accent-color: var(--fg); margin: 0; }
   --ground: var(--panel, #141414);
   background-color: var(--ground); color: var(--fg);
   background-image: repeating-linear-gradient(45deg, var(--flame) 0 2.8px, transparent 2.8px 7.5px);
-  border: 2px solid var(--flame);
+  border: 2.8px solid var(--flame);   /* same weight as the hatch lines */
   -webkit-text-stroke: 7px var(--ground); paint-order: stroke fill;      /* the halo: a thick outline drawn under each letter */
   transition: background-color .2s, color .2s, -webkit-text-stroke-color .2s;
 }
