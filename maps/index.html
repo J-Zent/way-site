@@ -1120,6 +1120,53 @@ out tags center;`;
   }
 
   // ---------- geometry ----------
+  // Tidy a small lake's outline (sheet units; A3 is 1044 across the short side, about 3.5 per mm).
+  // 1. resample evenly; 2. cut off thin spikes and slits: two points close across a gap (under `neck`)
+  //    but far apart along the shore, with only a sliver of water (or land) between them;
+  // 3. round the shore with a light Gaussian blur around the ring.
+  function tidyRing(r, ws) {
+    const step = 0.7, neck = 1.6 + 1.6 * ws, sigma = 0.9 * ws;
+    if (r.length < 4) return r;
+    // resample the closed ring
+    const pts = r.concat([r[0]]), cum = [0];
+    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const total = cum[cum.length - 1];
+    if (total < neck * 6) return r;                      // a tiny pond: leave it be
+    const n = Math.max(8, Math.round(total / step)); let q = [];
+    for (let k = 0, j = 1; k < n; k++) {
+      const sv = total * k / n;
+      while (j < cum.length - 1 && cum[j] < sv) j++;
+      const t = (sv - cum[j - 1]) / ((cum[j] - cum[j - 1]) || 1);
+      q.push([pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * t, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * t]);
+    }
+    // start on the main body (nearest the centre), so no spike straddles the start of the ring
+    const cx = q.reduce((a, p) => a + p[0], 0) / q.length, cy = q.reduce((a, p) => a + p[1], 0) / q.length;
+    let s0 = 0, best = Infinity;
+    q.forEach((p, i) => { const dd = (p[0] - cx) ** 2 + (p[1] - cy) ** 2; if (dd < best) { best = dd; s0 = i; } });
+    q = q.slice(s0).concat(q.slice(0, s0));
+    // cut spikes: for each point, the farthest point along the shore (within reach) that is still across a narrow neck
+    const reach = Math.min(q.length - 2, Math.round(70 / step)), minArc = Math.round(neck * 2.2 / step), out = [];
+    const loopArea = (a, b) => { let s = 0; for (let k = a; k < b; k++) s += q[k][0] * q[k + 1][1] - q[k + 1][0] * q[k][1]; return Math.abs((s + q[b][0] * q[a][1] - q[a][0] * q[b][1]) / 2); };
+    for (let i = 0; i < q.length; i++) {
+      out.push(q[i]);
+      let cut = -1;
+      for (let j = Math.min(q.length - 1, i + reach); j >= i + minArc; j--) {
+        if (Math.hypot(q[j][0] - q[i][0], q[j][1] - q[i][1]) < neck && loopArea(i, j) < neck * (j - i) * step * 0.5) { cut = j; break; }
+      }
+      if (cut > 0) i = cut - 1;
+    }
+    if (out.length < 6) return r;
+    // round the shore
+    if (!(sigma > 0)) return out;
+    const m = out.length, R = Math.min(Math.floor(m / 3), Math.ceil(sigma / step * 2.5)), w = [];
+    for (let k = 0; k <= R; k++) w.push(Math.exp(-((k * step) ** 2) / (2 * sigma * sigma)));
+    return out.map((_, i) => {
+      let sx = 0, sy = 0, sw = 0;
+      for (let k = -R; k <= R; k++) { const p = out[(i + k + m) % m], wk = w[Math.abs(k)]; sx += p[0] * wk; sy += p[1] * wk; sw += wk; }
+      return [sx / sw, sy / sw];
+    });
+  }
+
   function polyArea(p) {
     let a = 0;
     for (let i = 0; i < p.length; i++) { const u = p[i], v = p[(i + 1) % p.length]; a += u[0] * v[1] - v[0] * u[1]; }
@@ -1302,10 +1349,16 @@ out tags center;`;
       : b && water.coast && water.coast.length
       ? seaRings(water.coast.map(c => ({ nodes: c.nodes, pts: c.coords.map(q => project(q[0], q[1])) })), b)
       : [];
-    const areas = water.areas.map(a => ({
-      ...a,
-      rs: a.outer.concat(a.inner).map(r => rdp(r.map(c => project(c[0], c[1])), 0.4)).filter(r => r.length > 2)
-    })).filter(a => a.rs.length);
+    const ws = o.smooth == null ? 1 : +o.smooth;
+    const areas = water.areas.map(a => {
+      let rs = a.outer.concat(a.inner).map(r => r.map(c => project(c[0], c[1])));
+      // Small, whole lakes are tidied: thin spikes (inlet creeks traced into the outline, slivers) are cut
+      // off at their base and the shore is gently rounded. Rivers, the sea, big lakes and lakes split
+      // across tiles are left exactly as mapped, so they still line up with everything else.
+      const perim = rs.reduce((q, r) => q + r.reduce((t, pt, i) => t + Math.hypot(pt[0] - r[(i + 1) % r.length][0], pt[1] - r[(i + 1) % r.length][1]), 0), 0);
+      if (ws > 0 && !a.river && !a.cut && perim < 700) rs = rs.map(r => tidyRing(r, ws));
+      return { ...a, rs: rs.map(r => rdp(r, 0.4)).filter(r => r.length > 2) };
+    }).filter(a => a.rs.length);
     // filled water shapes, so callers can keep other labels off the water
     if (sea.length) out.shapes.push(sea);
     for (const a of areas) out.shapes.push(a.rs);
