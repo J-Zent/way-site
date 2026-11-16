@@ -81,6 +81,18 @@ html.is-day .header { color: inherit; transition: none; } /* at sunrise the type
 main { position: relative; z-index: 1; isolation: isolate; }
 .mark-word { height: calc(100svh - var(--ticker-h) - env(safe-area-inset-top, 0px)); min-height: 420px; display: grid; place-items: center; padding: var(--header-h) 24px 40px; }
 .wordmark { margin: 0; font: 400 clamp(64px, 17vw, 260px)/1 var(--mark); letter-spacing: -0.01em; white-space: nowrap; cursor: default; }
+/* the full stop of WAY. tucks under the right arm of the Y, as in the logo. The offsets come from each font's
+   own letter widths (Audiowide: Y 1600, "." 420 of 2048 units; DM Mono: every letter 0.6em), minus any letter-spacing. */
+.tuck { display: inline-block; }
+.way .tuck { margin-left: -0.206em; }
+.wordmark .tuck { margin-left: -0.196em; }
+.wordmark.flick .tuck { margin-left: 0; }   /* the wild fonts keep their own full stop */
+.ways__label .tuck { margin-left: -0.585em; }
+/* on phones the big WAY. stands up: one letter per line, centred */
+@media (max-width: 640px) {
+  .wordmark { font-size: min(23svh, 46vw); line-height: .92; text-align: center; white-space: normal; }
+  .wordmark .l { display: block; }
+}
 /* the flicker: hidden until its fonts are in, so the fallback font never shows */
 .js .wordmark { visibility: hidden; }
 .js .wordmark.is-on { visibility: visible; }
@@ -173,15 +185,15 @@ main { position: relative; z-index: 1; isolation: isolate; }
 
 <main id="top">
   <section class="mark-word" aria-label="WAY.">
-    <h1 class="wordmark">WAY.</h1>
+    <h1 class="wordmark" aria-label="WAY."><span class="l">W</span><span class="l">A</span><span class="l">Y<span class="tuck">.</span></span></h1>
   </section>
 
   <section class="statement" aria-label="Mission">
-    <p><span class="way">WAY.</span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living. It is a reminder to courageously say <span class="cloud">&ldquo;here I am.&rdquo;</span> To first, prior to anything, live the reality of being beloved.</p>
+    <p><span class="way">WAY<span class="tuck">.</span></span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living. It is a reminder to courageously say <span class="cloud">&ldquo;here I am.&rdquo;</span> To first, prior to anything, live the reality of being beloved.</p>
   </section>
 
   <section class="ways" aria-labelledby="ways-title">
-    <h2 class="ways__label" id="ways-title">Why WAY.</h2>
+    <h2 class="ways__label" id="ways-title">Why WAY<span class="tuck">.</span></h2>
     <figure class="wv">
       <blockquote><p>Jesus answered, &ldquo;I am <span class="trail">the way<svg class="swash" viewBox="0 0 284 39" preserveAspectRatio="none" aria-hidden="true"><path d="M281.0 11.0L276.0 5.0L273.0 4.0L271.0 2.0L234.0 2.0L232.0 4.0L222.0 4.0L221.0 5.0L211.0 5.0L210.0 6.0L203.0 6.0L202.0 7.0L193.0 7.0L192.0 8.0L186.0 8.0L185.0 9.0L177.0 9.0L176.0 10.0L160.0 11.0L159.0 12.0L144.0 13.0L143.0 14.0L135.0 14.0L134.0 15.0L125.0 15.0L124.0 16.0L118.0 16.0L117.0 17.0L105.0 17.0L104.0 18.0L96.0 18.0L95.0 19.0L82.0 19.0L81.0 20.0L68.0 20.0L67.0 21.0L52.0 21.0L51.0 22.0L39.0 22.0L38.0 23.0L8.0 24.0L2.0 27.0L2.0 30.0L8.0 33.0L55.0 33.0L56.0 32.0L82.0 32.0L83.0 31.0L96.0 31.0L97.0 30.0L112.0 30.0L113.0 29.0L136.0 28.0L137.0 27.0L144.0 27.0L145.0 26.0L156.0 26.0L157.0 25.0L163.0 25.0L164.0 24.0L175.0 24.0L176.0 23.0L193.0 22.0L194.0 21.0L202.0 21.0L203.0 20.0L215.0 20.0L216.0 19.0L225.0 19.0L226.0 18.0L251.0 17.0L253.0 20.0L245.0 27.0L244.0 29.0L244.0 34.0L246.0 36.0L256.0 36.0L258.0 34.0L260.0 34.0L264.0 31.0L267.0 30.0L275.0 24.0L281.0 17.0Z"/></svg></span> and the truth and the life. No one comes to the Father except through me.&rdquo;</p></blockquote>
       <figcaption>John 14:6 · NIV</figcaption>
@@ -223,7 +235,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
     'nosifer', 'bowlbyone', 'zentokyozoo', 'shrikhand', 'abrilfatface', 'trainone', 'rubikmicrobe', 'bungeeshade',
     'monofett', 'bodonimoda', 'unifrakturmaguntia', 'pressstart2p'];
   const N = 26;                                   // font changes before it lands
-  const land = () => { word.style.fontFamily = ''; word.style.fontSize = ''; word.style.opacity = ''; glow.style.opacity = ''; glow.style.animation = ''; word.classList.add('is-on'); };
+  const land = () => { word.style.fontFamily = ''; word.style.fontSize = ''; word.style.opacity = ''; glow.style.opacity = ''; glow.style.animation = ''; word.classList.remove('flick'); word.classList.add('is-on'); };
   // (it plays for everyone, Reduce Motion included, like the rest of the site's animations)
   const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`));
   faces.forEach(f => document.fonts.add(f));
@@ -235,6 +247,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
     land();
     const base = word.getBoundingClientRect();        // the landed size: every wild font is sized relative to it
     const order = FONTS.slice().sort(() => Math.random() - 0.5);
+    word.classList.add('flick');
     word.style.opacity = '0'; glow.style.animation = 'none'; glow.style.opacity = '.6';
     await wait(350);
     for (let i = 0; i < N; i++) {
@@ -246,7 +259,7 @@ main { position: relative; z-index: 1; isolation: isolate; }
       word.style.fontFamily = `'flick-${order[i % order.length]}'`;
       word.style.fontSize = '100px';
       const r = word.getBoundingClientRect();
-      const k = Math.min(base.width * (0.8 + Math.random() * 0.4) / r.width, base.height * 1.5 / r.height, innerWidth * 0.92 / r.width);
+      const k = Math.min(base.width * (0.8 + Math.random() * 0.4) / r.width, base.height * 1.15 / r.height, innerWidth * 0.92 / r.width, innerHeight * 0.8 / r.height);
       word.style.fontSize = (100 * k).toFixed(1) + 'px';
       word.style.opacity = '1';
       glow.style.opacity = (.72 + Math.random() * .28).toFixed(2);   // the candle glow trembles with it

@@ -87,8 +87,15 @@ html.is-day .header { color: inherit; transition: none; } /* at sunrise the type
 .verse figcaption { margin-top: 28px; font: 500 12px/1.4 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; }
 
 /* ---- what WAY. is: the stacked topo mark, one sentence, and the ways in ---- */
-.intro { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: auto 1fr; gap: clamp(40px, 7vw, 96px); align-items: center; }
-.intro__mark { display: block; width: clamp(150px, 19vw, 220px); height: auto; }
+/* the full stop of WAY. tucks under the right arm of the Y, as in the logo. The offsets come from each font's
+   own letter widths (Audiowide: Y 1600, "." 420 of 2048 units; DM Mono: every letter 0.6em), minus any letter-spacing. */
+.tuck { display: inline-block; }
+.way .tuck { margin-left: -0.206em; }
+.intro__label .tuck { margin-left: -0.585em; }
+/* the topo WAY. lies across on wide screens and stands up on phones */
+.intro { max-width: 760px; margin: 0 auto; display: grid; gap: clamp(40px, 6vw, 72px); }
+.intro__mark { display: block; width: 100%; height: auto; }
+.intro picture { display: block; }
 .intro__label { margin: 0 0 18px; font: 500 12px/1.4 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; }
 .intro__lede { margin: 0; max-width: 34ch; font: 400 clamp(19px, 2vw, 23px)/1.7 var(--body); text-wrap: pretty; }
 .intro__lede .way { font: 400 1.35em/1 "Audiowide", var(--mono); }
@@ -105,7 +112,8 @@ html.is-day .header { color: inherit; transition: none; } /* at sunrise the type
 .doors .soon { opacity: .5; }
 .doors .soon i { font: 400 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; font-style: normal; }
 @media (max-width: 640px) {
-  .intro { grid-template-columns: 1fr; justify-items: center; gap: 44px; }
+  .intro { justify-items: center; gap: 44px; }
+  .intro picture, .intro__mark { width: 170px; }
   .intro__text { width: 100%; }
   .doors a, .doors .soon { grid-template-columns: 6.5em 1fr auto; gap: 12px; }
   .doors span { font-size: 15px; }
@@ -174,10 +182,13 @@ html.is-day .header { color: inherit; transition: none; } /* at sunrise the type
 
     <!-- what WAY. is -->
     <div class="intro" role="region" aria-labelledby="intro-title">
-      <img class="intro__mark" src="/img/logo/way-topo-stack-black.svg" width="533" height="1382" alt="WAY. with its letters stacked, each one cut out of a topographic map.">
+      <picture>
+        <source media="(max-width: 640px)" srcset="/img/logo/way-topo-stack-black.svg" width="424" height="1382">
+        <img class="intro__mark" src="/img/logo/way-topo-row-black.svg" width="1382" height="424" alt="WAY., each letter cut out of a topographic map.">
+      </picture>
       <div class="intro__text">
-        <p class="intro__label" id="intro-title">What is WAY.</p>
-        <p class="intro__lede"><span class="way">WAY.</span> is film photographs, short films and topographic maps from time spent outside, made as a reminder to live, and to live loved.</p>
+        <p class="intro__label" id="intro-title">What is WAY<span class="tuck">.</span></p>
+        <p class="intro__lede"><span class="way">WAY<span class="tuck">.</span></span> is film photographs, short films and topographic maps from time spent outside, made as a reminder to live, and to live loved.</p>
         <ul class="doors">
           <li><a href="/mission/"><b>Mission</b><span>Why it exists</span></a></li>
           <li><a href="/maps/"><b>Maps</b><span>Make a printable topo map of anywhere</span></a></li>
