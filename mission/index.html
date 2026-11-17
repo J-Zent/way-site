@@ -118,6 +118,9 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .statement { margin: 0; font-size: 2.9cqw; line-height: 1.6; text-wrap: pretty; }
 .verses { columns: 3; column-gap: 3.2cqw; column-rule: .18cqw solid var(--ink); margin-top: .4cqw; font-size: 2.1cqw; line-height: 1.5; }   /* the verses run on from column to column, like copy */
 .verses .verse { break-inside: auto; }
+.verses > .kicker { margin-top: 0; }
+.verses > .head { break-after: avoid; }
+.verses { margin-top: 1.8cqw !important; }   /* the head sits at the top of the first column; the other two start level with it */
 .verses .verse cite { break-before: avoid; break-inside: avoid; }
 .grid { display: grid; gap: 2.4cqw; }
 .grid--front { grid-template-columns: 1.1fr .9fr; margin-top: 1.8cqw; align-items: start; }
@@ -261,9 +264,9 @@ html.scrolled .hint { opacity: 0; }
     </div>
   </div>
   <hr class="rule">
-  <span class="kicker">Why WAY.</span>
-  <h2 class="head">The inspiration</h2>
   <div class="verses">
+    <span class="kicker">Why WAY.</span>
+    <h2 class="head">The inspiration</h2>
     <div class="verse"><p>Jesus answered, &ldquo;I am the way and the truth and the life. No one comes to the Father except through me.&rdquo;<cite>John 14:6 · NIV</cite></div>
     <div class="verse"><p>This is what the <span class="lord">Lord</span> says: &ldquo;Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.&rdquo;<cite>Jeremiah 6:16 · NIV</cite></div>
     <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19&ndash;20 · NIV</cite></div>
@@ -283,7 +286,7 @@ html.scrolled .hint { opacity: 0; }
       <div class="entry"><p class="date">Entry 02 · place · date</p><p>Placeholder for a second entry. This one might be about a map: the ridge we traced with a finger the night before, and how different it felt underfoot. Room here for a small photograph, printed in black and white.</p></div>
       <div class="entry"><p class="date">Entry 03 · place · date</p><p>Placeholder for a third entry. Shorter. A single thought carried home from a long day, set down before it fades. The kind of note you find later in a jacket pocket.</p></div>
     </div>
-    <figure class="spread__photo"><img src="/img/mission/sail.png" srcset="/img/mission/sail-600.png 600w, /img/mission/sail.png 900w" sizes="(max-width: 640px) 60vw, 34vw" alt="A sailboat crossing a lake below hazy mountains, pine boughs hanging into the frame."><figcaption>Frame 05 · 35mm film</figcaption></figure>
+    <figure class="spread__photo"><img src="/img/mission/sail.png" srcset="/img/mission/sail-600.png 600w, /img/mission/sail.png 900w" sizes="(max-width: 640px) 60vw, 34vw" alt="A sailboat crossing a lake below hazy mountains, pine boughs hanging into the frame."><figcaption>Frame 05 · ISO 400 · ƒ/8 · 1/250</figcaption></figure>
     <div class="spread__below">
       <span class="kicker">Translation</span>
       <h2 class="head greek" lang="el">ζῆτε ἀγαπώμενοι</h2>
@@ -459,6 +462,20 @@ html.scrolled .hint { opacity: 0; }
     st.animate([{ transform: `rotate(${rot}deg) scale(1.25)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.97)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
       { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
   }
+  // the corner lifts a little, twice, and settles: the page shows it turns (only if nobody has scrolled yet)
+  function tease() {
+    if (flip !== 'peel' || scrollY > 2) return;
+    const t0 = performance.now(), D = 1900;
+    const step = now => {
+      const t = (now - t0) / D;
+      if (scrollY > 2) return paint();
+      if (t >= 1) { peel(sheets[0], 0, 0, 0); return paint(); }
+      const lift = .17 * Math.pow(Math.sin(Math.PI * Math.min(1, t / .55)), 2) + .09 * Math.pow(Math.sin(Math.PI * Math.max(0, (t - .55) / .45)), 2);
+      sheets[0].style.zIndex = N + 10; peel(sheets[0], 0, lift, ease(lift));
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
   let run = 0;
   async function press() {
     const id = ++run;
@@ -482,7 +499,7 @@ html.scrolled .hint { opacity: 0; }
     }
     if (id !== run) return;
     sheets.forEach(s => s.classList.remove('unprinted'));
-    slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; fitLeads(); setTimeout(stamp, 380); } });
+    slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; fitLeads(); setTimeout(stamp, 380); setTimeout(() => { if (id === run) tease(); }, 1700); } });
   }
   Promise.race([ready, wait(8000).then(() => 'late')]).then(v => { if (v !== 'late') press(); });
   document.querySelectorAll('.mast__logo').forEach(l => { l.style.cursor = 'pointer'; l.addEventListener('click', () => ready.then(press)); });
