@@ -63,7 +63,6 @@ html[data-flip="fold"] .page--solo { display: none; }
 .flap, .cast { position: absolute; width: min(94vw, calc((100svh - 36px) * 0.72)); aspect-ratio: 0.72; pointer-events: none; visibility: hidden; transform-origin: 0 0; }
 .flap__paper { position: absolute; inset: 0; background-color: #E3DAC6;
   -webkit-mask: url(/img/paper/edge.png) center / 100% 100% no-repeat; mask: url(/img/paper/edge.png) center / 100% 100% no-repeat; }
-.flap__paper::after { content: ""; position: absolute; inset: 0; background: url(/img/paper/newsprint.png) center / 100% 100%; transform: scaleX(-1); }
 /* ---- the press: whole copies of the paper fly off the press onto the desk, each with WAY. in a different face ---- */
 .sheet.unprinted { opacity: 0; }
 .sheet.copy { z-index: 0; }
@@ -109,11 +108,12 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .lead { display: grid; grid-template-columns: 34cqw 1fr; gap: 3.2cqw; align-items: stretch; margin: 1.8cqw 0 1.8cqw; }
 .lead__photo { position: relative; display: flex; flex-direction: column; }
 .lead__photo img { flex: 1 1 0; min-height: 0; height: 0; object-fit: cover; object-position: 50% 58%; }   /* cropped to the height of the statement */
-.lead__text { display: flex; flex-direction: column; justify-content: center; }
+.lead__text { display: flex; flex-direction: column; justify-content: space-between; }   /* kicker level with the photo top, last line level with the caption */
 /* the front page is a column: the lead (photo and statement) grows to take whatever room the verses leave */
 .page:has(.lead) { display: flex; flex-direction: column; padding-bottom: 7cqw; }
 .page:has(.lead) .lead { flex: 1 1 auto; min-height: 0; }
 .lead .kicker { margin: 0 0 1.4cqw; }
+.lead .statement { margin-bottom: -.3em; }   /* trim the line's bottom leading so the last baseline sits on the caption's */
 .statement { margin: 0; font-size: 2.9cqw; line-height: 1.6; text-wrap: pretty; }
 .verses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; margin-top: .4cqw; font-size: 1.9cqw; line-height: 1.5; }
 .verses .verse { border-left: .18cqw solid var(--ink); padding-left: 1.6cqw; }
@@ -140,7 +140,7 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 
 /* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
 .stamp { position: absolute; z-index: 4; opacity: .9; pointer-events: none; }
-.shellstamp { position: absolute; z-index: 4; width: 14cqw; opacity: 1; pointer-events: none; }
+.shellstamp { position: absolute; z-index: 4; width: 12cqw; opacity: 1; pointer-events: none; }
 .stamp svg { width: 100%; height: auto; display: block; }
 .stamp--inside { right: 7cqw; bottom: 9cqw; width: 22cqw; transform: rotate(5deg); }
 
@@ -157,6 +157,8 @@ html.scrolled .hint { opacity: 0; }
   .sheet, .flap, .cast, .stackshade { width: 94vw; aspect-ratio: 0.43; }
   .page { font-size: 2.6cqw; }
   .lead { grid-template-columns: 1fr; gap: 2.4cqw; }
+  .lead { grid-template-rows: 1fr auto; }   /* the photo takes the spare height, the words sit right under it */
+  .lead__text { justify-content: flex-start; }
   .lead__photo { width: 100%; }
   .lead__photo img { flex: 1 1 0; height: auto; min-height: 40cqw; }
   .page:has(.lead) { padding-bottom: 6cqw; }
@@ -202,7 +204,7 @@ html.scrolled .hint { opacity: 0; }
 <template id="t-front">
   <hr class="rule rule--double">
   <div class="mast">
-    <div class="mast__logo"><img src="/img/logo/way-topo-plate.svg" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1</div><p class="mast__type" aria-hidden="true">WAY.</p></div>
+    <div class="mast__logo"><img src="/img/logo/way-topo-row-white.svg" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1</div><p class="mast__type" aria-hidden="true">WAY.</p></div>
   </div>
   <hr class="rule rule--double">
   <div class="bar"><span lang="el">ζῆτε ἀγαπώμενοι</span><i>✱</i><span>live loved</span><i>✱</i><span class="today">—</span></div>
@@ -210,7 +212,7 @@ html.scrolled .hint { opacity: 0; }
   <div class="lead">
     <figure class="lead__photo">
       <img src="/img/mission/pigalle.png" srcset="/img/mission/pigalle-780.png 780w, /img/mission/pigalle.png 1040w" sizes="(max-width: 640px) 66vw, 26vw" alt="A neon sign reading Place Pigalle under an awning, with a ferry crossing grey water beyond.">
-      <figcaption>Frame 04 · Sony DSC-HX400V · ISO 80 · ƒ/3.5 · 1/320</figcaption>
+      <figcaption>Frame 04 · 1/320</figcaption>
     </figure>
     <div class="lead__text">
       <span class="kicker">Mission</span>
@@ -377,10 +379,11 @@ html.scrolled .hint { opacity: 0; }
     const page = document.getElementById('front');
     page.querySelectorAll('.shellstamp').forEach(x => x.remove());
     const st = document.createElement('img'); st.className = 'shellstamp'; st.src = '/img/paper/shell-stamp.png'; st.alt = ''; st.setAttribute('aria-hidden', 'true');
-    const verses = page.querySelector('.verses'), pw = page.offsetWidth;
-    const top = verses.offsetTop - pw * .16;                                     // just above the verses, over the rule
-    st.style.left = (pw * (.64 + Math.random() * .16)) + 'px'; st.style.top = (top + (Math.random() - .5) * pw * .05) + 'px';
-    const rot = (Math.random() - .5) * 26;
+    const lead = page.querySelector('.lead'), pw = page.offsetWidth;
+    const phone = matchMedia('(max-width: 640px)').matches;
+    const top = lead.querySelector('.kicker').getBoundingClientRect().top - page.getBoundingClientRect().top - pw * (phone ? .2 : .012);   // level with the MISSION box (on phones, over the photo's corner)                                      // top right, under the date, in the space above the statement
+    st.style.left = (pw * (.8 + Math.random() * .045)) + 'px'; st.style.top = (top + (Math.random() - .5) * pw * .025) + 'px';
+    const rot = (Math.random() - .5) * 22;
     page.appendChild(st);
     st.animate([{ transform: `rotate(${rot}deg) scale(1.25)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.97)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
       { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
