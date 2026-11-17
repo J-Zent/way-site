@@ -144,6 +144,8 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 
 /* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
 .stamp { position: absolute; z-index: 4; opacity: 1; mix-blend-mode: multiply; pointer-events: none; }
+.hia { white-space: nowrap; }
+.boxstamp { position: absolute; z-index: 4; pointer-events: none; mix-blend-mode: multiply; background: url(/img/paper/box-stamp.png) center / 100% 100% no-repeat; }   /* a pink box pressed around "here I am" */
 .shellstamp { position: absolute; z-index: 4; width: 12cqw; opacity: 1; mix-blend-mode: multiply; pointer-events: none; }
 .stamp svg { width: 100%; height: auto; display: block; }
 .stamp--inside { right: 5cqw; bottom: 6.5cqw; width: 19cqw; transform: rotate(5deg); }
@@ -260,7 +262,7 @@ html.scrolled .hint { opacity: 0; }
     <div class="lead__text">
       <span class="kicker">Mission</span>
       <h2 class="head">The purpose</h2>
-      <p class="statement"><span class="way">WAY<span class="tuck">.</span></span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living. It is a reminder to courageously say &ldquo;here I am.&rdquo; To first, prior to anything, live the reality of being beloved.</p>
+      <p class="statement"><span class="way">WAY<span class="tuck">.</span></span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living. It is a reminder to courageously say <span class="hia">&ldquo;here I am.&rdquo;</span> To first, prior to anything, live the reality of being beloved.</p>
     </div>
   </div>
   <hr class="rule">
@@ -451,7 +453,7 @@ html.scrolled .hint { opacity: 0; }
   // the shell, stamped by hand once the real paper is on top: a little off each time
   function stamp() {
     const page = document.getElementById('front');
-    page.querySelectorAll('.shellstamp').forEach(x => x.remove());
+    page.querySelectorAll('.shellstamp, .boxstamp').forEach(x => x.remove());
     const st = document.createElement('img'); st.className = 'shellstamp'; st.src = '/img/paper/shell-stamp.png'; st.alt = ''; st.setAttribute('aria-hidden', 'true');
     const lead = page.querySelector('.lead'), pw = page.offsetWidth;
     const phone = matchMedia('(max-width: 640px)').matches;
@@ -461,6 +463,18 @@ html.scrolled .hint { opacity: 0; }
     page.appendChild(st);
     st.animate([{ transform: `rotate(${rot}deg) scale(1.25)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.97)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
       { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
+    setTimeout(() => boxStamp(page), 300);
+  }
+  // then, quickly, a box around "here I am", never quite square to the line
+  function boxStamp(page) {
+    const w = page.querySelector('.hia'); if (!w) return;
+    const pr = page.getBoundingClientRect(), r = w.getBoundingClientRect(), em = parseFloat(getComputedStyle(w).fontSize), j = () => (Math.random() - .5) * em * .3;
+    const bx = document.createElement('div'); bx.className = 'boxstamp'; bx.setAttribute('aria-hidden', 'true');
+    Object.assign(bx.style, { left: (r.left - pr.left - em * .45 + j()) + 'px', top: (r.top - pr.top - em * .28 + j()) + 'px', width: (r.width + em * .9 + j()) + 'px', height: (r.height + em * .5) + 'px' });
+    const rot = (Math.random() - .5) * 5;
+    page.appendChild(bx);
+    bx.animate([{ transform: `rotate(${rot}deg) scale(1.12)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.98)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
+      { duration: 220, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
   }
   // the corner lifts a little, twice, and settles: the page shows it turns (only if nobody has scrolled yet)
   function tease() {
