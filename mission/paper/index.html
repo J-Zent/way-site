@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" data-flip="curl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Mission (paper prototype) · WAY.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fira+Mono:wght@400;500;700&family=Courier+Prime:ital@0;1&family=Audiowide&family=Anton&display=swap">
+<style>
+/* PROTOTYPE: the Mission page as a newspaper. One sheet at a time sits in the middle of the screen; scrolling turns it
+   to the next. ?flip=curl turns the page like a book (around the left edge); ?flip=fold folds it in half and slides it away.
+   Every size inside a sheet is in cqw (a hundredth of the sheet's width), so the whole paper scales with the screen. */
+:root { --paper: #EEE8DC; --ink: #141414; --night: #0E0E0E; --flame: #FF4B3E; --lemon: #FBD271; --stone: #CFC8BA; --blush: #F2A0B4;
+  --mono: "DM Mono", "Fira Mono", ui-monospace, monospace; --body: "Courier Prime", "Courier New", monospace; --head: "Anton", Impact, sans-serif; --mark: "Audiowide", var(--mono); }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--night); color: var(--ink); font-family: var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--flame); }
+
+/* the desk the paper lies on: a dark, slightly lit surface with film grain */
+.desk { position: fixed; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 40%, #232220, var(--night) 75%); }
+.desk::after { content: ""; position: absolute; inset: -50%; opacity: .14; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+.book { position: fixed; inset: 0; display: grid; place-items: center; perspective: 2600px; perspective-origin: 50% 50%; }
+.sheet { position: absolute; width: min(94vw, calc((100svh - 36px) * 0.72)); --sw: 1; aspect-ratio: 0.72; container-type: inline-size;
+  background: var(--paper); color: var(--ink); overflow: hidden; box-shadow: 0 2cqw 6cqw rgba(0,0,0,.45);
+  transform-style: preserve-3d; backface-visibility: hidden; will-change: transform; }
+/* newsprint: a faint fibre texture and a soft vignette at the edges */
+.sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; mix-blend-mode: multiply;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,0,0,.12) 100%); }
+.sheet .back { position: absolute; inset: 0; background: #E6DFD2; transform: rotateY(180deg); backface-visibility: hidden; }
+.page { position: absolute; inset: 0; padding: 4cqw 4.5cqw 4cqw; font-size: 2.05cqw; line-height: 1.55; backface-visibility: hidden; }
+
+/* ---- the fold variant: the sheet is drawn twice, clipped to its top and bottom halves ---- */
+html[data-flip="fold"] .sheet { transform-style: flat; }
+/* each half is a real half-height window onto its own copy of the page (no clip-paths: Chrome will not hide the back of a clipped face) */
+.half { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; }
+.half--top { top: 0; background: var(--paper); }
+.half--bottom .front { background: var(--paper); }
+.half--bottom { top: 50%; transform-origin: 50% 0%; transform-style: preserve-3d; backface-visibility: hidden; }
+.half--bottom .front .page { top: -100%; height: 200%; inset-inline: 0; }
+.half--bottom .front { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; }
+.half--bottom .back { transform: rotateX(180deg); }
+.half--bottom .back::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.16), rgba(0,0,0,0) 45%); }
+html[data-flip="fold"] .sheet { overflow: visible; perspective: 1800px; transform-style: flat; }
+html[data-flip="fold"] .sheet > .back { display: none; }
+html:not([data-flip="fold"]) .half { display: none; }
+html[data-flip="fold"] .page--solo { display: none; }
+
+/* ---- masthead ---- */
+.rule { border: 0; border-top: .35cqw solid var(--ink); margin: 0; }
+.rule--double { border-top-width: .25cqw; border-bottom: .25cqw solid var(--ink); height: .55cqw; }
+.mast { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2cqw; padding: 1cqw 0 .6cqw; }
+.mast__side { font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.mast__side:last-child { text-align: right; }
+.mast__side[lang="el"] { text-transform: none; font-family: "Fira Mono", var(--mono); letter-spacing: .06em; }
+.wordmark { margin: 0; font: 400 12cqw/1 var(--mark); letter-spacing: -.01em; white-space: nowrap; text-align: center; visibility: hidden; }
+.wordmark.is-on { visibility: visible; }
+.wordmark .tuck { display: inline-block; margin-left: -.206em; }
+.wordmark.flick .tuck { margin-left: 0; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 1.5cqw; padding: .9cqw 0; font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+.bar span[lang="el"] { text-transform: none; font-family: "Fira Mono", var(--mono); letter-spacing: .06em; }
+.bar i { font-style: normal; }
+
+/* ---- stories ---- */
+.kicker { display: inline-block; font: 500 1.3cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; padding: .7cqw 1.2cqw; background: var(--ink); color: var(--paper); margin: 2.2cqw 0 1.2cqw; }
+h1.head { margin: 0 0 1.2cqw; font: 400 12cqw/.92 var(--head); letter-spacing: -.005em; text-transform: uppercase; }
+h2.head { margin: 0 0 .8cqw; font: 400 4.2cqw/.95 var(--head); text-transform: uppercase; }
+h3.head { margin: 0 0 .6cqw; font: 400 2.6cqw/1 var(--head); text-transform: uppercase; }
+.deck { margin: 0 0 1.6cqw; font: italic 2.1cqw/1.4 var(--body); }
+.cols { column-gap: 3cqw; column-rule: .18cqw solid var(--ink); }
+.cols--2 { columns: 2; } .cols--3 { columns: 3; }
+.cols p { margin: 0 0 1.1em; text-align: justify; hyphens: auto; break-inside: avoid; }
+.cols p:first-child::first-letter { float: left; font: 400 5.4cqw/0.82 var(--head); padding: .45cqw .9cqw 0 0; }
+.way { font: 400 1.25em/1 var(--mark); }
+.way .tuck { display: inline-block; margin-left: -.206em; }
+figure { margin: 0; break-inside: avoid; }
+figure img { display: block; width: 100%; height: auto; }
+figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.pull { margin: 1.4cqw 0; padding: 1.6cqw 1.8cqw; border: .3cqw solid var(--flame); color: var(--ink); text-align: center; font: 400 3cqw/1.25 var(--body); break-inside: avoid; }
+.pull small { display: block; margin-top: .8cqw; font: 500 1.2cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--flame); }
+.grid { display: grid; gap: 2.4cqw; }
+.grid--front { grid-template-columns: 1.1fr .9fr; margin-top: 1.8cqw; align-items: start; }
+.grid--front .cols { grid-row: 1 / 3; }
+.box { border: .25cqw solid var(--ink); padding: 1.6cqw 1.8cqw; }
+.box h3 { margin-bottom: 1.2cqw; }
+.entry { break-inside: avoid; margin-bottom: 2cqw; }
+.entry .date { font: 500 1.2cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; margin: 0 0 .5cqw; }
+.entry p { margin: 0; text-align: justify; hyphens: auto; }
+.verse { break-inside: avoid; margin: 0 0 1.6cqw; }
+.verse p { margin: 0; }
+.verse cite { display: block; margin-top: .5cqw; font: 500 1.15cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; font-style: normal; }
+.lord { font-variant: small-caps; letter-spacing: .04em; }
+.gloss { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .8cqw 1.6cqw; }
+.gloss dt { font: 700 1.9cqw/1.5 "Fira Mono", var(--mono); }
+.gloss dd { margin: 0; }
+.greek { margin: .6cqw 0 1.2cqw; font: 400 4.6cqw/1.1 "Fira Mono", var(--mono); letter-spacing: -.02em; text-align: center; }
+.foot { position: absolute; left: 4.5cqw; right: 4.5cqw; bottom: 2.6cqw; display: flex; justify-content: space-between; font: 500 1.2cqw/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+.swash-u { position: relative; white-space: nowrap; }
+.swash-u svg { position: absolute; left: -2%; width: 104%; bottom: -.35em; height: .5em; fill: var(--lemon); z-index: -1; }
+
+/* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
+.stamp { position: absolute; z-index: 4; color: var(--blush); mix-blend-mode: multiply; opacity: .92; pointer-events: none; }
+.stamp svg { width: 100%; height: auto; display: block; }
+.stamp--front { right: 5cqw; top: 23cqw; width: 26cqw; transform: rotate(-7deg); }
+.stamp--inside { right: 7cqw; bottom: 9cqw; width: 22cqw; transform: rotate(5deg); }
+
+/* ---- which flip: a small switch, and the scroll hint ---- */
+.switch { position: fixed; right: 16px; bottom: 14px; z-index: 40; display: flex; gap: 4px; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.switch a { color: var(--paper); text-decoration: none; padding: 8px 10px; border: 1px solid rgba(238,232,220,.35); }
+.switch a[aria-current] { background: var(--lemon); color: var(--ink); border-color: var(--lemon); }
+.hint { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 40; font: 500 11px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--paper); opacity: .6; transition: opacity .4s; }
+html.scrolled .hint { opacity: 0; }
+.scroller { position: relative; height: 400svh; }
+@media (max-width: 640px) {
+  .switch { right: 12px; bottom: 54px; }
+  .book { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+  .sheet { width: 94vw; aspect-ratio: 0.62; }
+  .page { font-size: 2.6cqw; }
+  .grid--front { grid-template-columns: 1fr; }
+  .grid--front .cols { grid-row: auto; columns: 1; }
+  .grid--front .box { grid-column: auto; }
+  .cols--3 { columns: 2; }
+}
+</style>
+</head>
+<body>
+<div class="desk" aria-hidden="true"></div>
+
+<div class="book" id="book">
+
+  <!-- ===== PAGE 1: front page ===== -->
+  <article class="sheet" data-i="0" aria-label="Front page">
+    <div class="back" aria-hidden="true"></div>
+    <div class="page page--solo" id="front"></div>
+    <div class="half half--top" aria-hidden="true"><div class="page" data-copy="front"></div></div>
+    <div class="half half--bottom" aria-hidden="true"><div class="back"></div><div class="front"><div class="page" data-copy="front"></div></div></div>
+  </article>
+
+  <!-- ===== PAGE 2: field notes ===== -->
+  <article class="sheet" data-i="1" aria-label="Field notes">
+    <div class="back" aria-hidden="true"></div>
+    <div class="page page--solo" id="notes"></div>
+    <div class="half half--top" aria-hidden="true"><div class="page" data-copy="notes"></div></div>
+    <div class="half half--bottom" aria-hidden="true"><div class="back"></div><div class="front"><div class="page" data-copy="notes"></div></div></div>
+  </article>
+
+  <!-- ===== PAGE 3: why WAY. ===== -->
+  <article class="sheet" data-i="2" aria-label="Why WAY.">
+    <div class="back" aria-hidden="true"></div>
+    <div class="page page--solo" id="why"></div>
+    <div class="half half--top" aria-hidden="true"><div class="page" data-copy="why"></div></div>
+    <div class="half half--bottom" aria-hidden="true"><div class="back"></div><div class="front"><div class="page" data-copy="why"></div></div></div>
+  </article>
+</div>
+
+<!-- page contents live in templates, so the fold variant can draw each page twice without repeating the markup -->
+<template id="t-front">
+  <hr class="rule rule--double">
+  <div class="mast">
+    <div class="mast__side">Vol. 1 · No. 1</div>
+    <h1 class="wordmark" aria-label="WAY."><span class="l">W</span><span class="l">A</span><span class="l">Y<span class="tuck">.</span></span></h1>
+    <div class="mast__side" lang="el">ζῆτε ἀγαπώμενοι</div>
+  </div>
+  <hr class="rule rule--double">
+  <div class="bar"><span>A reminder to live</span><i>✱</i><span lang="el">live loved</span><i>✱</i><span class="today">—</span></div>
+  <hr class="rule">
+  <span class="kicker">Mission</span>
+  <h1 class="head">Here I am.</h1>
+  <p class="deck">On why <span class="way">WAY<span class="tuck">.</span></span> exists, and the simple task it keeps pointing back to.</p>
+  <div class="grid grid--front">
+    <div class="cols cols--2">
+      <p><span class="way">WAY<span class="tuck">.</span></span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living.</p>
+      <p>It is a reminder to courageously say “here I am.” To first, prior to anything, live the reality of being beloved.</p>
+      <p>Film photographs, short films and topographic maps from time spent outside: each one a note left on the trail, a small record that someone was here and was paying attention.</p>
+      <div class="pull">“here I am.”<small>the whole mission, in three words</small></div>
+    </div>
+    <figure>
+      <img src="/img/mission/front.jpg" srcset="/img/mission/front-800.jpg 800w, /img/mission/front.jpg 1596w" sizes="40vw" alt="A dirt turnout above a grey sea, a hand-painted sign reading No Motorcycles, No Fireworks, and a headland beyond.">
+      <figcaption>Frame 04 · 35mm · the coast, a grey morning</figcaption>
+    </figure>
+    <div class="box" style="grid-column: 2">
+      <h3 class="head">In this issue</h3>
+      <p style="margin:0 0 .6em"><b>Page 2</b> · Notes from the trail</p>
+      <p style="margin:0 0 .6em"><b>Page 3</b> · Why WAY.: the verses behind the name</p>
+      <p style="margin:0"><b>Maps</b> · Make a printable topo map of anywhere, at <span style="font-family:var(--mono)">/maps</span></p>
+    </div>
+  </div>
+  <div class="stamp stamp--front" aria-hidden="true">
+    <svg viewBox="0 0 320 110"><defs><filter id="rough" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".055" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter></defs>
+      <g filter="url(#rough)" fill="none" stroke="currentColor" stroke-width="5"><rect x="6" y="6" width="308" height="98" rx="10"/></g>
+      <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">LIVE LOVED</text><text x="160" y="84" text-anchor="middle" font-size="17" font-family="Fira Mono, monospace" letter-spacing="1">ζῆτε ἀγαπώμενοι</text></g>
+    </svg>
+  </div>
+  <div class="foot"><span>Page 1 of 3</span><span>scroll to turn the page</span></div>
+</template>
+
+<template id="t-notes">
+  <hr class="rule rule--double">
+  <div class="bar"><span>Field notes</span><i>✱</i><span>Journal</span><i>✱</i><span>Page 2</span></div>
+  <hr class="rule">
+  <span class="kicker">Journal</span>
+  <h2 class="head">Notes from the trail</h2>
+  <p class="deck">Placeholder entries. The real ones go here, dated and in order, each with a frame from the roll.</p>
+  <div class="cols cols--3">
+    <div class="entry"><p class="date">Entry 01 · place · date</p><p>Placeholder text for the first entry. A short account of a morning: where we started, what the light did on the water, the moment someone stopped walking and just looked. Two or three paragraphs at most, written plainly.</p></div>
+    <div class="entry"><p class="date">Entry 02 · place · date</p><p>Placeholder for a second entry. This one might be about a map: the ridge we traced with a finger the night before, and how different it felt underfoot. Room here for a small photograph, printed in black and white.</p></div>
+    <figure><img src="/img/mission/front-800.jpg" alt="" aria-hidden="true"><figcaption>Frame 05 · 35mm · placeholder</figcaption></figure>
+    <div class="entry"><p class="date">Entry 03 · place · date</p><p>Placeholder for a third entry. Shorter. A single thought carried home from a long day, set down before it fades. The kind of note you find later in a jacket pocket.</p></div>
+    <div class="entry"><p class="date">Entry 04 · place · date</p><p>Placeholder for a fourth entry, or a reader's letter, or a list: things seen, things learned, things to go back for. The column format is forgiving about length.</p></div>
+    <div class="pull">“ask where the good way is, and walk in it”<small>Jeremiah 6:16</small></div>
+  </div>
+  <div class="stamp stamp--inside" aria-hidden="true">
+    <svg viewBox="0 0 320 110"><g filter="url(#rough)" fill="none" stroke="currentColor" stroke-width="5"><rect x="6" y="6" width="308" height="98" rx="10"/></g>
+      <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">FIELD COPY</text><text x="160" y="84" text-anchor="middle" font-size="17">35MM · NO. 1</text></g>
+    </svg>
+  </div>
+  <div class="foot"><span>Page 2 of 3</span><span>scroll to turn the page</span></div>
+</template>
+
+<template id="t-why">
+  <hr class="rule rule--double">
+  <div class="bar"><span>Why WAY.</span><i>✱</i><span>The verses behind the name</span><i>✱</i><span>Page 3</span></div>
+  <hr class="rule">
+  <div class="grid" style="grid-template-columns: 1.25fr .75fr; margin-top: 2cqw;">
+    <div>
+      <span class="kicker" style="margin-top:0">Why WAY.</span>
+      <h2 class="head">The way, the paths, the light</h2>
+      <div class="cols cols--2">
+        <div class="verse"><p>Jesus answered, “I am <span class="swash-u">the way<svg viewBox="0 0 290 29" preserveAspectRatio="none" aria-hidden="true"><path d="M287.0 6.0L283.0 2.0L261.0 2.0L259.0 4.0L243.0 4.0L242.0 5.0L215.0 6.0L214.0 7.0L201.0 7.0L200.0 8.0L180.0 8.0L179.0 9.0L161.0 9.0L160.0 10.0L130.0 10.0L129.0 11.0L99.0 11.0L98.0 12.0L65.0 12.0L64.0 13.0L48.0 13.0L47.0 14.0L30.0 14.0L29.0 15.0L20.0 15.0L19.0 16.0L8.0 16.0L5.0 18.0L2.0 18.0L2.0 22.0L4.0 23.0L26.0 23.0L27.0 22.0L46.0 22.0L47.0 21.0L146.0 20.0L147.0 19.0L180.0 19.0L181.0 18.0L222.0 17.0L224.0 16.0L226.0 18.0L225.0 23.0L228.0 26.0L241.0 26.0L243.0 24.0L250.0 23.0L254.0 21.0L257.0 21.0L261.0 19.0L264.0 19.0L268.0 17.0L272.0 17.0L276.0 15.0L280.0 15.0L283.0 13.0L285.0 13.0L287.0 12.0Z"/></svg></span> and the truth and the life. No one comes to the Father except through me.”<cite>John 14:6 · NIV</cite></div>
+        <div class="verse"><p>This is what the <span class="lord">Lord</span> says: “Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.”<cite>Jeremiah 6:16 · NIV</cite></div>
+        <div class="verse"><p>Your word is a lamp for my feet, a light on my path.<cite>Psalm 119:105 · NIV</cite></div>
+        <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19–20 · NIV</cite></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3 class="head">In the shell</h3>
+      <p class="greek" lang="el">ζῆτε<br>ἀγαπώμενοι</p>
+      <dl class="gloss">
+        <dt lang="el">ζῆτε</dt><dd>“live”: present, plural, a command. Keep living, all of you.</dd>
+        <dt lang="el">ἀγαπώμενοι</dt><dd>“being loved”: a passive participle. Not loving first; being loved first.</dd>
+      </dl>
+      <p style="margin:1.4cqw 0 0; font: 500 1.2cqw/1.5 var(--mono); letter-spacing:.14em; text-transform:uppercase;">The words that fill the chambers of the shell, from the centre outward.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Page 3 of 3</span><span lang="el" style="text-transform:none; font-family:'Fira Mono', monospace;">ζῆτε ἀγαπώμενοι · live loved</span></div>
+</template>
+
+<div class="scroller" id="scroller" aria-hidden="true"></div>
+<p class="hint" aria-hidden="true">Scroll to turn the page</p>
+<nav class="switch" aria-label="Page turn style">
+  <a href="?flip=curl" data-flip="curl">Curl</a>
+  <a href="?flip=fold" data-flip="fold">Fold</a>
+</nav>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const flip = new URLSearchParams(location.search).get('flip') === 'fold' ? 'fold' : 'curl';
+  root.dataset.flip = flip;
+  document.querySelectorAll('.switch a').forEach(a => { if (a.dataset.flip === flip) a.setAttribute('aria-current', 'true'); });
+
+  // fill the pages from their templates (the fold variant draws each page twice, clipped into halves)
+  const fill = (el, id) => { el.innerHTML = ''; el.appendChild(document.getElementById('t-' + id).content.cloneNode(true)); };
+  for (const id of ['front', 'notes', 'why']) {
+    fill(document.getElementById(id), id);
+    document.querySelectorAll(`[data-copy="${id}"]`).forEach(el => fill(el, id));
+  }
+  // today's date in the bar
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+  document.querySelectorAll('.today').forEach(el => el.textContent = today);
+
+  // ---- the page turn, driven by scroll ----
+  const sheets = [...document.querySelectorAll('.sheet')], N = sheets.length;
+  const SLOT = 1.35;                                   // screens of scrolling per page (a hold, then the turn)
+  document.getElementById('scroller').style.height = ((N - 1) * SLOT * 100 + 100) + 'svh';
+  const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  let ticking = false;
+  function paint() {
+    ticking = false;
+    const y = scrollY / innerHeight;
+    root.classList.toggle('scrolled', y > 0.05);
+    sheets.forEach((s, i) => {
+      // progress of this sheet's own turn: 0 = flat on the pile, 1 = gone
+      const raw = (y - i * SLOT - 0.35) / (SLOT - 0.35);
+      const p = i === N - 1 ? 0 : Math.min(1, Math.max(0, raw));
+      const e = ease(p);
+      s.style.zIndex = N - i + (p > 0 && p < 1 ? 10 : 0);
+      s.style.visibility = p >= 1 ? 'hidden' : 'visible';
+      if (flip === 'curl') {
+        // like a book: the sheet swings around its left edge and away; the shadow deepens mid-turn
+        s.style.transformOrigin = '0% 50%';
+        s.style.transform = `rotateY(${-178 * e}deg)`;
+        s.style.boxShadow = `0 2cqw 6cqw rgba(0,0,0,${.45 + .3 * Math.sin(Math.PI * e)})`;
+        s.style.filter = `brightness(${1 - .22 * Math.sin(Math.PI * e)})`;
+      } else {
+        // a fold: the bottom half folds up over the top (first 60%), then the folded sheet slides up and off
+        const f = Math.min(1, e / .6), g = Math.max(0, (e - .6) / .4);
+        const bottom = s.querySelector('.half--bottom');
+        bottom.style.transform = `rotateX(${-180 * f}deg)`;
+        bottom.style.filter = `brightness(${1 - .25 * Math.sin(Math.PI * f)})`;
+        s.style.transformOrigin = '50% 0%';
+        s.style.transform = `translateY(${-130 * g}%) rotate(${-2 * g}deg)`;
+      }
+    });
+  }
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(paint); } }, { passive: true });
+  addEventListener('resize', paint);
+  paint();
+
+  // ---- the flicker in the masthead: the press warming up, then the wordmark lands ----
+  const words = [...document.querySelectorAll('.wordmark')];
+  const FONTS = ['frijole','righteous','rubikwetpaint','sixtyfour','bigshouldersstencildisplay','wallpoet','anton','saira','librebarcode39text','majormonodisplay','monoton','fasterone','rubikglitch','playfairdisplay','lacquer','tiltprism','nosifer','bowlbyone','zentokyozoo','shrikhand','abrilfatface','trainone','rubikmicrobe','bungeeshade','monofett','bodonimoda','unifrakturmaguntia','pressstart2p'];
+  const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`)); faces.forEach(f => document.fonts.add(f));
+  const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), ...faces.map(f => f.load().catch(() => null))]);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const land = () => words.forEach(w => { w.style.fontFamily = ''; w.style.opacity = ''; w.classList.remove('flick'); w.classList.add('is-on'); });
+  let run = 0;
+  async function flicker() {
+    const id = ++run; land();
+    const order = FONTS.slice().sort(() => Math.random() - .5), n = 26;
+    words.forEach(w => { w.classList.add('flick'); w.style.opacity = '0'; }); await wait(350);
+    for (let i = 0; i < n; i++) {
+      if (id !== run) return;
+      if (i === 9 || i === 17) { words.forEach(w => w.style.opacity = '0'); await wait(50); }
+      words.forEach(w => { w.style.fontFamily = `'flick-${order[i % order.length]}'`; w.style.opacity = '1'; });
+      const t = i / (n - 1); await wait(40 + 120 * t * t);
+    }
+    if (id === run) land();
+  }
+  Promise.race([ready, wait(8000).then(() => 'late')]).then(v => v === 'late' ? land() : flicker());
+  words.forEach(w => w.addEventListener('click', () => ready.then(flicker)));
+})();
+</script>
+</body>
+</html>
