@@ -67,9 +67,10 @@ html.is-day .header { color: inherit; transition: none; } /* at sunrise the type
 .stage { position: fixed; inset: 0; z-index: 0; background: var(--night); transition: background-color var(--dusk); pointer-events: none; }
 html.is-day .stage { background: var(--paper); }
 .stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.1s cubic-bezier(.45, 0, .2, 1); }
+.stage .s-sunset { object-position: 50% 78%; }
 .stage .s-peaks { object-position: 50% 30%; }
 .stage .s-tree { object-position: 50% 22%; }
-html[data-scene="hero"] .s-sunrise, html[data-scene="name"] .s-peaks, html[data-scene="verse"] .s-tree { opacity: 1; }
+html[data-scene="hero"] .s-sunset, html[data-scene="name"] .s-peaks, html[data-scene="verse"] .s-tree { opacity: 1; }
 main, .ticker { position: relative; }
 main { z-index: 1; }
 .scene { position: relative; }
@@ -79,16 +80,16 @@ main { z-index: 1; }
 .scene--pin { height: 230svh; }
 .pin { position: sticky; top: 0; height: 100svh; display: grid; place-items: center; padding: 0 max(24px, env(safe-area-inset-left, 0px)); }
 .name-mark { width: min(78vw, 980px); height: auto; display: block; position: relative; }
-/* a soft paper mist behind the word, like morning fog, so its thin lines read over forest as well as sky */
-.scene--pin:not(.scene--verse) picture { position: relative; display: block; }
-.scene--pin:not(.scene--verse) picture::before { content: ""; position: absolute; inset: -18% -10%; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(238, 232, 220, .85), rgba(238, 232, 220, .72) 62%, rgba(238, 232, 220, 0)); filter: blur(6px); }
+.pin--name { align-content: center; gap: clamp(22px, 4svh, 40px); }
+/* "What is WAY." under the logo, always underlined in lemonade; links to the Mission page */
+.what { position: relative; justify-self: center; font: 500 13px/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--paper); text-decoration: none; padding: 6px 2px; }
+.what .tuck { margin-left: -0.585em; }
+.what .swash { left: -4px; width: calc(100% + 10px); bottom: -4px; height: 9px; z-index: -1; clip-path: none; }
 .scene--verse .pin { align-items: start; padding-top: clamp(96px, 16svh, 180px); color: var(--ink); }
 .scene--intro { min-height: 100svh; display: grid; align-items: center; padding: clamp(100px, 16svh, 160px) max(24px, env(safe-area-inset-left, 0px)) clamp(100px, 14svh, 160px); }
 @media (max-width: 640px) {
-  .name-mark { width: auto; height: min(66svh, 560px); }
+  .name-mark { width: auto; height: min(58svh, 520px); }
   .stage .s-peaks { object-position: 50% 40%; }
-  .scene--pin:not(.scene--verse) picture::before { inset: -16% -75%; }
   .scene--verse .pin { padding-top: 48px; }
   .scene--verse .verse p { font-size: 17px; line-height: 1.65; }
   .scene--verse .verse figcaption { margin-top: 18px; }
@@ -191,24 +192,25 @@ main { z-index: 1; }
 </header>
 
 <div class="stage" aria-hidden="true">
-  <img class="s-sunrise" src="img/home/sunrise.jpg" srcset="img/home/sunrise-1200.jpg 1200w, img/home/sunrise.jpg 2285w" sizes="100vw" alt="" fetchpriority="high">
+  <img class="s-sunset" src="img/hero.jpg" srcset="img/hero-1200.jpg 1200w, img/hero.jpg 2239w" sizes="100vw" alt="" fetchpriority="high">
   <img class="s-peaks" src="img/home/peaks.jpg" srcset="img/home/peaks-1200.jpg 1200w, img/home/peaks.jpg 2400w" sizes="100vw" alt="" loading="lazy">
   <img class="s-tree" src="img/home/tree.jpg" srcset="img/home/tree-1200.jpg 1200w, img/home/tree.jpg 1708w" sizes="100vw" alt="" loading="lazy">
 </div>
 
 <main id="top">
   <!-- 1 · sunrise -->
-  <section class="scene scene--hero" id="hero" data-scene="hero" aria-label="Film photo of the sun rising over a sea of fog between dark ridges.">
+  <section class="scene scene--hero" id="hero" data-scene="hero" aria-label="Film photo of a sunset over the ocean, the sky fading from deep blue to orange above a dark headland.">
     <p class="hero__cap">Frame 01 · 35mm</p>
   </section>
 
   <!-- 2 · the name, over the peaks -->
   <section class="scene scene--pin" data-scene="name" aria-label="WAY.">
-    <div class="pin">
+    <div class="pin pin--name">
       <picture>
-        <source media="(max-width: 640px)" srcset="/img/logo/way-topo-stack-black.svg" width="424" height="1382">
-        <img class="name-mark" src="/img/logo/way-topo-row-black.svg" width="1382" height="424" alt="WAY., each letter cut out of a topographic map.">
+        <source media="(max-width: 640px)" srcset="/img/logo/way-topo-stack-bold-black.svg" width="424" height="1382">
+        <img class="name-mark" src="/img/logo/way-topo-row-bold-black.svg" width="1382" height="424" alt="WAY., each letter cut out of a topographic map.">
       </picture>
+      <a class="what" href="/mission/">What is WAY<span class="tuck">.</span><svg class="swash" viewBox="0 0 284 39" preserveAspectRatio="none" aria-hidden="true"><path d="M281.0 11.0L276.0 5.0L273.0 4.0L271.0 2.0L234.0 2.0L232.0 4.0L222.0 4.0L221.0 5.0L211.0 5.0L210.0 6.0L203.0 6.0L202.0 7.0L193.0 7.0L192.0 8.0L186.0 8.0L185.0 9.0L177.0 9.0L176.0 10.0L160.0 11.0L159.0 12.0L144.0 13.0L143.0 14.0L135.0 14.0L134.0 15.0L125.0 15.0L124.0 16.0L118.0 16.0L117.0 17.0L105.0 17.0L104.0 18.0L96.0 18.0L95.0 19.0L82.0 19.0L81.0 20.0L68.0 20.0L67.0 21.0L52.0 21.0L51.0 22.0L39.0 22.0L38.0 23.0L8.0 24.0L2.0 27.0L2.0 30.0L8.0 33.0L55.0 33.0L56.0 32.0L82.0 32.0L83.0 31.0L96.0 31.0L97.0 30.0L112.0 30.0L113.0 29.0L136.0 28.0L137.0 27.0L144.0 27.0L145.0 26.0L156.0 26.0L157.0 25.0L163.0 25.0L164.0 24.0L175.0 24.0L176.0 23.0L193.0 22.0L194.0 21.0L202.0 21.0L203.0 20.0L215.0 20.0L216.0 19.0L225.0 19.0L226.0 18.0L251.0 17.0L253.0 20.0L245.0 27.0L244.0 29.0L244.0 34.0L246.0 36.0L256.0 36.0L258.0 34.0L260.0 34.0L264.0 31.0L267.0 30.0L275.0 24.0L281.0 17.0Z"/></svg></a>
     </div>
   </section>
 
@@ -222,20 +224,6 @@ main { z-index: 1; }
     </div>
   </section>
 
-  <!-- 4 · what WAY. is, on paper -->
-  <section class="scene scene--intro" data-scene="intro">
-    <div class="intro" role="region" aria-labelledby="intro-title">
-      <div class="intro__text">
-        <p class="intro__label" id="intro-title">What is WAY<span class="tuck">.</span>?</p>
-        <p class="intro__lede"><span class="way">WAY<span class="tuck">.</span></span> is film photographs, short films and topographic maps from time spent outside, made as a reminder to live, and to live loved.</p>
-        <ul class="doors">
-          <li><a href="/mission/"><b>Mission</b><span>Why it exists</span></a></li>
-          <li><a href="/maps/"><b>Maps</b><span>Make a printable topo map of anywhere</span></a></li>
-          <li><div class="soon"><b>Media</b><span>Photographs and films</span><i>Soon</i></div></li>
-        </ul>
-      </div>
-    </div>
-  </section>
 </main>
 
 <script>
@@ -250,7 +238,7 @@ main { z-index: 1; }
     let cur = scenes[0];
     for (const sc of scenes) if (sc.getBoundingClientRect().top <= mid) cur = sc;
     const name = cur.dataset.scene;
-    if (root.dataset.scene !== name) { root.dataset.scene = name; root.classList.toggle('is-day', name === 'intro'); }
+    if (root.dataset.scene !== name) { root.dataset.scene = name;  }
   };
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
   addEventListener('resize', update);
