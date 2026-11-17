@@ -90,7 +90,7 @@ html[data-flip="fold"] .page--solo { display: none; }
 .bar i { font-style: normal; }
 
 /* ---- stories ---- */
-.kicker { display: inline-block; align-self: flex-start; justify-self: start; width: fit-content; font: 500 1.3cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; padding: .7cqw 1.2cqw; background: var(--ink); color: var(--paper); margin: 2.2cqw 0 1.2cqw; }
+.kicker { display: block; align-self: flex-start; justify-self: start; width: fit-content; margin: 1.8cqw 0 1.2cqw; font: 400 3.6cqw/.95 var(--head); letter-spacing: .005em; text-transform: uppercase; color: var(--ink); }   /* section heads: the condensed headline face */
 h1.head { margin: 0 0 1.2cqw; font: 400 12cqw/.92 var(--head); letter-spacing: -.005em; text-transform: uppercase; }
 h2.head { margin: 0 0 .8cqw; font: 400 4.2cqw/.95 var(--head); text-transform: uppercase; }
 h3.head { margin: 0 0 .6cqw; font: 400 2.6cqw/1 var(--head); text-transform: uppercase; }
@@ -115,7 +115,7 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .lead .kicker { margin: 0 0 1.4cqw; }
 .lead .statement { margin-bottom: -.3em; }   /* trim the line's bottom leading so the last baseline sits on the caption's */
 .statement { margin: 0; font-size: 2.9cqw; line-height: 1.6; text-wrap: pretty; }
-.verses { columns: 3; column-gap: 3.2cqw; column-rule: .18cqw solid var(--ink); margin-top: .4cqw; font-size: 1.9cqw; line-height: 1.5; }   /* the verses run on from column to column, like copy */
+.verses { columns: 3; column-gap: 3.2cqw; column-rule: .18cqw solid var(--ink); margin-top: .4cqw; font-size: 2.1cqw; line-height: 1.5; }   /* the verses run on from column to column, like copy */
 .verses .verse { break-inside: auto; }
 .verses .verse cite { break-before: avoid; break-inside: avoid; }
 .grid { display: grid; gap: 2.4cqw; }
@@ -139,10 +139,10 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .swash-u svg { position: absolute; left: -2%; width: 104%; bottom: -.35em; height: .5em; fill: var(--lemon); z-index: -1; }
 
 /* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
-.stamp { position: absolute; z-index: 4; opacity: .9; pointer-events: none; }
-.shellstamp { position: absolute; z-index: 4; width: 12cqw; opacity: 1; pointer-events: none; }
+.stamp { position: absolute; z-index: 4; opacity: 1; mix-blend-mode: multiply; pointer-events: none; }
+.shellstamp { position: absolute; z-index: 4; width: 12cqw; opacity: 1; mix-blend-mode: multiply; pointer-events: none; }
 .stamp svg { width: 100%; height: auto; display: block; }
-.stamp--inside { right: 6cqw; bottom: 6.5cqw; width: 20cqw; transform: rotate(5deg); }
+.stamp--inside { right: 5cqw; bottom: 6.5cqw; width: 19cqw; transform: rotate(5deg); }
 /* page two: a long narrow rail down the left, a tall photo top right, and a section under the photo to the foot */
 .page:has(.spread) { display: flex; flex-direction: column; padding-bottom: 7cqw; }
 .spread { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 27cqw 1fr; grid-template-rows: 1fr auto; column-gap: 3cqw; margin-top: 1.8cqw; }
@@ -154,7 +154,10 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .spread__photo { display: flex; flex-direction: column; min-height: 0; }
 .spread__photo img { flex: 1 1 0; min-height: 0; height: 0; object-fit: cover; object-position: 50% 62%; }
 .spread__below { padding-top: 2.2cqw; }
-.spread__below .head { margin-bottom: 1.4cqw; }
+.spread__below .kicker { margin-top: 0; }
+.spread__below .greek { text-align: left; margin: 0 0 1.6cqw; white-space: nowrap; }
+.spread__below .gloss { font-size: 1.9cqw; line-height: 1.5; }
+.spread__below .gloss dt { font-size: 2.1cqw; }
 
 /* ---- which flip: a small switch, and the scroll hint ---- */
 .switch { position: fixed; right: 16px; bottom: 14px; z-index: 40; display: flex; gap: 4px; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
@@ -185,9 +188,11 @@ html.scrolled .hint { opacity: 0; }
   .cols--3 { columns: 2; }
   .spread { grid-template-columns: 1fr 1.5fr; column-gap: 2.6cqw; }
   .rail { padding-right: 2.6cqw; }
+  .kicker { font-size: 4.6cqw; }
   .rail .entry p:not(.date) { font-size: 2.45cqw; }
-  .spread__below .cols--2 { columns: 1; }
-  .spread__below .head { font-size: 5.4cqw; }
+  .spread__below .greek { font-size: 5.6cqw; }
+  .spread__below .gloss { font-size: 2.6cqw; grid-template-columns: 1fr; gap: .2cqw; }
+  .spread__below .gloss dd { margin-bottom: 1.6cqw; }
 }
 </style>
 </head>
@@ -219,7 +224,7 @@ html.scrolled .hint { opacity: 0; }
 <template id="t-front">
   <hr class="rule rule--double">
   <div class="mast">
-    <div class="mast__logo"><img src="/img/logo/way-topo-row-white-bolder.svg" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1</div><p class="mast__type" aria-hidden="true">WAY.</p></div>
+    <div class="mast__logo"><img src="/img/logo/way-topo-row-white-bolder.svg?v=2" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1</div><p class="mast__type" aria-hidden="true">WAY.</p></div>
   </div>
   <hr class="rule rule--double">
   <div class="bar"><span lang="el">ζῆτε ἀγαπώμενοι</span><i>✱</i><span>live loved</span><i>✱</i><span class="today">—</span></div>
@@ -237,7 +242,7 @@ html.scrolled .hint { opacity: 0; }
   <hr class="rule">
   <span class="kicker">Why WAY.</span>
   <div class="verses">
-    <div class="verse"><p>Jesus answered, &ldquo;I am <span class="swash-u">the way<svg viewBox="0 0 290 29" preserveAspectRatio="none" aria-hidden="true"><path d="M287.0 6.0L283.0 2.0L261.0 2.0L259.0 4.0L243.0 4.0L242.0 5.0L215.0 6.0L214.0 7.0L201.0 7.0L200.0 8.0L180.0 8.0L179.0 9.0L161.0 9.0L160.0 10.0L130.0 10.0L129.0 11.0L99.0 11.0L98.0 12.0L65.0 12.0L64.0 13.0L48.0 13.0L47.0 14.0L30.0 14.0L29.0 15.0L20.0 15.0L19.0 16.0L8.0 16.0L5.0 18.0L2.0 18.0L2.0 22.0L4.0 23.0L26.0 23.0L27.0 22.0L46.0 22.0L47.0 21.0L146.0 20.0L147.0 19.0L180.0 19.0L181.0 18.0L222.0 17.0L224.0 16.0L226.0 18.0L225.0 23.0L228.0 26.0L241.0 26.0L243.0 24.0L250.0 23.0L254.0 21.0L257.0 21.0L261.0 19.0L264.0 19.0L268.0 17.0L272.0 17.0L276.0 15.0L280.0 15.0L283.0 13.0L285.0 13.0L287.0 12.0Z"/></svg></span> and the truth and the life. No one comes to the Father except through me.&rdquo;<cite>John 14:6 · NIV</cite></div>
+    <div class="verse"><p>Jesus answered, &ldquo;I am the way and the truth and the life. No one comes to the Father except through me.&rdquo;<cite>John 14:6 · NIV</cite></div>
     <div class="verse"><p>This is what the <span class="lord">Lord</span> says: &ldquo;Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.&rdquo;<cite>Jeremiah 6:16 · NIV</cite></div>
     <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19&ndash;20 · NIV</cite></div>
   </div>
@@ -253,16 +258,17 @@ html.scrolled .hint { opacity: 0; }
       <span class="kicker">Journal</span>
       <div class="entry"><p class="date">Entry 01 · place · date</p><p>Placeholder text for the first entry. A short account of a morning: where we started, what the light did on the water, the moment someone stopped walking and just looked. Two or three paragraphs at most, written plainly.</p></div>
       <div class="entry"><p class="date">Entry 02 · place · date</p><p>Placeholder for a second entry. This one might be about a map: the ridge we traced with a finger the night before, and how different it felt underfoot. Room here for a small photograph, printed in black and white.</p></div>
-      <div class="entry"><p class="date">Entry 05 · place · date</p><p>Placeholder for a fifth entry, kept short: the name of the cove, the time the tide turned.</p></div>
-      <div class="pull">“ask where the good way is, and walk in it”<small>Jeremiah 6:16</small></div>
+      <div class="entry"><p class="date">Entry 03 · place · date</p><p>Placeholder for a third entry. Shorter. A single thought carried home from a long day, set down before it fades. The kind of note you find later in a jacket pocket.</p></div>
+      <div class="entry"><p class="date">Entry 04 · place · date</p><p>Placeholder for a fourth entry, kept short: the name of the cove, the time the tide turned.</p></div>
     </div>
     <figure class="spread__photo"><img src="/img/mission/sail.png" srcset="/img/mission/sail-600.png 600w, /img/mission/sail.png 900w" sizes="(max-width: 640px) 60vw, 34vw" alt="A sailboat crossing a lake below hazy mountains, pine boughs hanging into the frame."><figcaption>Frame 05 · 35mm film</figcaption></figure>
     <div class="spread__below">
-      <h2 class="head">Notes from the trail</h2>
-      <div class="cols cols--2">
-        <div class="entry"><p class="date">Entry 03 · place · date</p><p>Placeholder for a third entry. Shorter. A single thought carried home from a long day, set down before it fades. The kind of note you find later in a jacket pocket.</p></div>
-        <div class="entry"><p class="date">Entry 04 · place · date</p><p>Placeholder for a fourth entry, or a reader's letter, or a list: things seen, things learned, things to go back for. The column format is forgiving about length.</p></div>
-      </div>
+      <h2 class="kicker">Translation</h2>
+      <p class="greek" lang="el">ζῆτε ἀγαπώμενοι</p>
+      <dl class="gloss">
+        <dt lang="el">ζῆτε</dt><dd>live. Present tense and plural, so it means to keep on living, and it is said to more than one person.</dd>
+        <dt lang="el">ἀγαπώμενοι</dt><dd>being loved. Passive and ongoing: the love is received, and it does not stop.</dd>
+      </dl>
     </div>
   </div>
   <img class="stamp stamp--inside" src="/img/paper/field-stamp.png" alt="" aria-hidden="true">
@@ -393,14 +399,20 @@ html.scrolled .hint { opacity: 0; }
     const wide = !matchMedia('(max-width: 640px)').matches;
     document.querySelectorAll('.lead').forEach(lead => {
       const st = lead.querySelector('.statement'), text = lead.querySelector('.lead__text');
-      if (!wide) { st.style.fontSize = ''; return; }
-      const H = lead.clientHeight, used = () => [...text.children].reduce((h, c) => h + c.getBoundingClientRect().height, 0) + lead.querySelector('.kicker').offsetHeight * 0;
+      if (!wide) { st.style.fontSize = ''; st.style.lineHeight = ''; return; }
+      const H = lead.clientHeight, used = () => [...text.children].reduce((h, c) => h + c.offsetHeight, 0) + lead.querySelector('.kicker').offsetHeight * 0;
       const pw = lead.clientWidth; let lo = pw * .022, hi = pw * .045;
+      st.style.lineHeight = '';
       for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; st.style.fontSize = m + 'px'; (used() + pw * .016 <= H ? lo = m : hi = m); }
       st.style.fontSize = lo + 'px';
+      // a line wrapping is a jump; take up what's left by opening the leading a touch, so it ends exactly on the caption
+      st.style.lineHeight = ''; const lh = parseFloat(getComputedStyle(st).lineHeight), lines = Math.round(st.offsetHeight / lh);
+      const slack = H - used() - pw * .016; if (lines > 0 && slack > 0) st.style.lineHeight = Math.min(lh + slack / lines, lo * 1.9) + 'px';
     });
   }
   document.fonts.ready.then(fitLeads); addEventListener('resize', fitLeads);
+  document.fonts.addEventListener('loadingdone', fitLeads);   // late faces (the headline face) change the heights
+  const ro = new ResizeObserver(() => requestAnimationFrame(fitLeads)); document.querySelectorAll('#front .lead').forEach(l => ro.observe(l));
   // size a face so its WAY. fills the same box as the topo logo (as wide as it, never much taller)
   function fitType(el, box) {
     el.style.fontSize = '100px';
@@ -415,7 +427,7 @@ html.scrolled .hint { opacity: 0; }
     const st = document.createElement('img'); st.className = 'shellstamp'; st.src = '/img/paper/shell-stamp.png'; st.alt = ''; st.setAttribute('aria-hidden', 'true');
     const lead = page.querySelector('.lead'), pw = page.offsetWidth;
     const phone = matchMedia('(max-width: 640px)').matches;
-    const top = lead.querySelector('.kicker').getBoundingClientRect().top - page.getBoundingClientRect().top - pw * (phone ? .2 : .085);   // level with the MISSION box (on phones, over the photo's corner)                                      // top right, under the date, in the space above the statement
+    const bar = page.querySelector('.bar'); const top = bar.getBoundingClientRect().top - page.getBoundingClientRect().top - pw * (phone ? .03 : .045);   // over the date   // level with the MISSION box (on phones, over the photo's corner)                                      // top right, under the date, in the space above the statement
     st.style.left = (pw * (.79 + Math.random() * .05)) + 'px'; st.style.top = (top + (Math.random() - .5) * pw * .025) + 'px';
     const rot = (Math.random() - .5) * 22;
     page.appendChild(st);
@@ -445,7 +457,7 @@ html.scrolled .hint { opacity: 0; }
     }
     if (id !== run) return;
     sheets.forEach(s => s.classList.remove('unprinted'));
-    slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; setTimeout(stamp, 380); } });
+    slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; fitLeads(); setTimeout(stamp, 380); } });
   }
   Promise.race([ready, wait(8000).then(() => 'late')]).then(v => { if (v !== 'late') press(); });
   document.querySelectorAll('.mast__logo').forEach(l => { l.style.cursor = 'pointer'; l.addEventListener('click', () => ready.then(press)); });
