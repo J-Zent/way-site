@@ -228,7 +228,7 @@ html.scrolled .hint { opacity: 0; }
   <div class="stackshade" aria-hidden="true"></div>
 
   <!-- ===== PAGE 1: front page ===== -->
-  <article class="sheet" data-i="0" aria-label="Front page">
+  <article class="sheet unprinted" data-i="0" aria-label="Front page">
     <div class="back" aria-hidden="true"></div>
     <div class="page page--solo" id="front"></div>
     <div class="half half--top" aria-hidden="true"><div class="page" data-copy="front"></div></div>
@@ -236,7 +236,7 @@ html.scrolled .hint { opacity: 0; }
   </article>
 
   <!-- ===== PAGE 2: field notes ===== -->
-  <article class="sheet" data-i="1" aria-label="Field notes">
+  <article class="sheet unprinted" data-i="1" aria-label="Field notes">
     <div class="back" aria-hidden="true"></div>
     <div class="page page--solo" id="notes"></div>
     <div class="half half--top" aria-hidden="true"><div class="page" data-copy="notes"></div></div>
@@ -515,7 +515,8 @@ html.scrolled .hint { opacity: 0; }
     sheets.forEach(s => s.classList.remove('unprinted'));
     slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; fitLeads(); setTimeout(stamp, 380); setTimeout(() => { if (id === run) tease(); }, 1700); } });
   }
-  Promise.race([ready, wait(8000).then(() => 'late')]).then(v => { if (v !== 'late') press(); });
+  // the sheets start hidden (in the markup, so nothing shows before the press runs); if the faces never arrive, just show the paper
+  Promise.race([ready, wait(8000).then(() => 'late')]).then(v => { if (v !== 'late') press(); else { sheets.forEach(s => s.classList.remove('unprinted')); setTimeout(stamp, 300); } });
   document.querySelectorAll('.mast__logo').forEach(l => { l.style.cursor = 'pointer'; l.addEventListener('click', () => ready.then(press)); });
 })();
 </script>
