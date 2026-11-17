@@ -452,18 +452,18 @@ html.scrolled .hint { opacity: 0; }
   }
   // the shell, stamped by hand once the real paper is on top: a little off each time
   function stamp() {
-    const page = document.getElementById('front');
-    page.querySelectorAll('.shellstamp, .boxstamp').forEach(x => x.remove());
+    const front = document.getElementById('front'), page = document.getElementById('notes');
+    document.querySelectorAll('.shellstamp, .boxstamp').forEach(x => x.remove());
+    // the shell goes on page two, in the open paper at the bottom left, a little off each time
     const st = document.createElement('img'); st.className = 'shellstamp'; st.src = '/img/paper/shell-stamp.png'; st.alt = ''; st.setAttribute('aria-hidden', 'true');
-    const lead = page.querySelector('.lead'), pw = page.offsetWidth;
-    const phone = matchMedia('(max-width: 640px)').matches;
-    const bar = page.querySelector('.bar'); const top = bar.getBoundingClientRect().top - page.getBoundingClientRect().top - pw * (phone ? .03 : .045) + (Math.random() - .35) * pw * .06;   // over the date   // level with the MISSION box (on phones, over the photo's corner)                                      // top right, under the date, in the space above the statement
-    st.style.left = (pw * (.66 + Math.random() * .2)) + 'px'; st.style.top = (top + (Math.random() - .5) * pw * .025) + 'px';
+    const pw = page.offsetWidth, ph = page.offsetHeight, phone = matchMedia('(max-width: 640px)').matches;
+    st.style.left = (pw * ((phone ? .06 : .07) + Math.random() * .1)) + 'px';
+    st.style.top = (ph - pw * ((phone ? .3 : .215) + Math.random() * .035)) + 'px';
     const rot = (Math.random() - .5) * 40;
     page.appendChild(st);
     st.animate([{ transform: `rotate(${rot}deg) scale(1.25)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.97)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
       { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
-    setTimeout(() => boxStamp(page), 300);
+    boxStamp(front);
   }
   // then, quickly, a box around "here I am", never quite square to the line
   function boxStamp(page) {
