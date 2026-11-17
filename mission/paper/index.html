@@ -29,8 +29,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   background: var(--paper); color: var(--ink); overflow: hidden; box-shadow: 0 2cqw 6cqw rgba(0,0,0,.45);
   transform-style: preserve-3d; backface-visibility: hidden; will-change: transform; }
 /* newsprint: a faint fibre texture and a soft vignette at the edges */
-.sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; mix-blend-mode: multiply;
-  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,0,0,.12) 100%); }
+.sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; mix-blend-mode: multiply; opacity: .9;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='1200'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .005' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .96  0 0 0 0 .93  0 0 0 0 .86  0 0 0 .55 .45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E") center / 100% 100%,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .9  0 0 0 0 .88  0 0 0 0 .84  0 0 0 .18 .82'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") 0 0 / 200px 200px,
+    radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 55%, rgba(110, 80, 40, .16) 100%),
+    linear-gradient(115deg, rgba(120, 85, 40, .12), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(120, 85, 40, .10)); }
 .sheet .back { position: absolute; inset: 0; background: #E6DFD2; transform: rotateY(180deg); backface-visibility: hidden; }
 .page { position: absolute; inset: 0; padding: 4cqw 4.5cqw 4cqw; font-size: 2.05cqw; line-height: 1.55; backface-visibility: hidden; }
 
@@ -57,12 +61,15 @@ html[data-flip="fold"] .page--solo { display: none; }
 /* ---- masthead ---- */
 .rule { border: 0; border-top: .35cqw solid var(--ink); margin: 0; }
 .rule--double { border-top-width: .25cqw; border-bottom: .25cqw solid var(--ink); height: .55cqw; }
-.mast { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2cqw; padding: 1cqw 0 .6cqw; }
+.mast { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2cqw; padding: 1.6cqw 0 1.2cqw; }
 .mast__side { font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
 .mast__side:last-child { text-align: right; }
 .mast__side[lang="el"] { text-transform: none; font-family: "Fira Mono", var(--mono); letter-spacing: .06em; }
-.wordmark { margin: 0; font: 400 12cqw/1 var(--mark); letter-spacing: -.01em; white-space: nowrap; text-align: center; visibility: hidden; }
-.wordmark.is-on { visibility: visible; }
+.mast__logo { position: relative; width: 58cqw; margin: 0 auto; }
+.mast__logo img { display: block; width: 100%; height: auto; visibility: hidden; }
+.mast__logo.is-on img { visibility: visible; }
+.wordmark { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 15cqw/1 var(--mark); letter-spacing: -.01em; white-space: nowrap; text-align: center; visibility: hidden; }
+.wordmark.flick { visibility: visible; }
 .wordmark .tuck { display: inline-block; margin-left: -.206em; }
 .wordmark.flick .tuck { margin-left: 0; }
 .bar { display: flex; justify-content: space-between; align-items: center; gap: 1.5cqw; padding: .9cqw 0; font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
@@ -78,7 +85,6 @@ h3.head { margin: 0 0 .6cqw; font: 400 2.6cqw/1 var(--head); text-transform: upp
 .cols { column-gap: 3cqw; column-rule: .18cqw solid var(--ink); }
 .cols--2 { columns: 2; } .cols--3 { columns: 3; }
 .cols p { margin: 0 0 1.1em; text-align: justify; hyphens: auto; break-inside: avoid; }
-.cols p:first-child::first-letter { float: left; font: 400 5.4cqw/0.82 var(--head); padding: .45cqw .9cqw 0 0; }
 .way { font: 400 1.25em/1 var(--mark); }
 .way .tuck { display: inline-block; margin-left: -.206em; }
 figure { margin: 0; break-inside: avoid; }
@@ -86,6 +92,12 @@ figure img { display: block; width: 100%; height: auto; }
 figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
 .pull { margin: 1.4cqw 0; padding: 1.6cqw 1.8cqw; border: .3cqw solid var(--flame); color: var(--ink); text-align: center; font: 400 3cqw/1.25 var(--body); break-inside: avoid; }
 .pull small { display: block; margin-top: .8cqw; font: 500 1.2cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--flame); }
+.lead { display: grid; grid-template-columns: 36cqw 1fr; gap: 3.2cqw; align-items: center; margin: 2.2cqw 0 2.4cqw; }
+.lead .kicker { margin: 0 0 1.4cqw; }
+.statement { margin: 0; font-size: 2.35cqw; line-height: 1.6; text-wrap: pretty; }
+.verses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; margin-top: .4cqw; }
+.verses .verse { border-left: .18cqw solid var(--ink); padding-left: 1.6cqw; }
+.verses .verse:first-child { border-left: 0; padding-left: 0; }
 .grid { display: grid; gap: 2.4cqw; }
 .grid--front { grid-template-columns: 1.1fr .9fr; margin-top: 1.8cqw; align-items: start; }
 .grid--front .cols { grid-row: 1 / 3; }
@@ -109,7 +121,7 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 /* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
 .stamp { position: absolute; z-index: 4; color: var(--blush); mix-blend-mode: multiply; opacity: .92; pointer-events: none; }
 .stamp svg { width: 100%; height: auto; display: block; }
-.stamp--front { right: 5cqw; top: 23cqw; width: 26cqw; transform: rotate(-7deg); }
+.stamp--front { left: 22cqw; top: 29cqw; width: 22cqw; transform: rotate(-8deg); }   /* across the photo's corner, like a stamp on a print */
 .stamp--inside { right: 7cqw; bottom: 9cqw; width: 22cqw; transform: rotate(5deg); }
 
 /* ---- which flip: a small switch, and the scroll hint ---- */
@@ -122,13 +134,19 @@ html.scrolled .hint { opacity: 0; }
 @media (max-width: 640px) {
   .switch { right: 12px; bottom: 54px; }
   .book { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
-  .sheet { width: 94vw; aspect-ratio: 0.62; }
+  .sheet { width: 94vw; aspect-ratio: 0.46; }
   .page { font-size: 2.6cqw; }
-  .grid--front { grid-template-columns: 1fr; }
-  .grid--front .cols { grid-row: auto; column-count: 1; }
-  .grid--front figure { order: -1; }
-  .grid--front .box { grid-column: auto; }
-  h1.head { font-size: 15cqw; }
+  .lead { grid-template-columns: 1fr; gap: 2.4cqw; }
+  .lead__photo { width: 58%; margin: 0 auto; }
+  .statement { font-size: 2.75cqw; line-height: 1.5; }
+  .page { padding-top: 3cqw; }
+  .verses { grid-template-columns: 1fr 1fr; gap: 2.4cqw; }
+  .verses .verse:last-child { grid-column: 1 / -1; }
+  .verses .verse { border-left: 0; padding-left: 0; }
+  .mast__logo { width: 64cqw; }
+  .stamp--front { left: auto; right: 8cqw; top: 40cqw; }
+  .foot { bottom: 2cqw; }
+  .foot span:last-child { max-width: 50%; text-align: right; }
   .cols--3 { columns: 2; }
 }
 </style>
@@ -154,13 +172,6 @@ html.scrolled .hint { opacity: 0; }
     <div class="half half--bottom" aria-hidden="true"><div class="back"></div><div class="front"><div class="page" data-copy="notes"></div></div></div>
   </article>
 
-  <!-- ===== PAGE 3: why WAY. ===== -->
-  <article class="sheet" data-i="2" aria-label="Why WAY.">
-    <div class="back" aria-hidden="true"></div>
-    <div class="page page--solo" id="why"></div>
-    <div class="half half--top" aria-hidden="true"><div class="page" data-copy="why"></div></div>
-    <div class="half half--bottom" aria-hidden="true"><div class="back"></div><div class="front"><div class="page" data-copy="why"></div></div></div>
-  </article>
 </div>
 
 <!-- page contents live in templates, so the fold variant can draw each page twice without repeating the markup -->
@@ -168,32 +179,28 @@ html.scrolled .hint { opacity: 0; }
   <hr class="rule rule--double">
   <div class="mast">
     <div class="mast__side">Vol. 1 · No. 1</div>
-    <h1 class="wordmark" aria-label="WAY."><span class="l">W</span><span class="l">A</span><span class="l">Y<span class="tuck">.</span></span></h1>
+    <div class="mast__logo"><img src="/img/logo/way-topo-row-black.svg" width="1382" height="424" alt="WAY."><p class="wordmark" aria-hidden="true">WAY.</p></div>
     <div class="mast__side" lang="el">ζῆτε ἀγαπώμενοι</div>
   </div>
   <hr class="rule rule--double">
   <div class="bar"><span>A reminder to live</span><i>✱</i><span lang="el">live loved</span><i>✱</i><span class="today">—</span></div>
   <hr class="rule">
-  <span class="kicker">Mission</span>
-  <h1 class="head">Here I am.</h1>
-  <p class="deck">On why <span class="way">WAY<span class="tuck">.</span></span> exists, and the simple task it keeps pointing back to.</p>
-  <div class="grid grid--front">
-    <div class="cols cols--2">
-      <p><span class="way">WAY<span class="tuck">.</span></span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living.</p>
-      <p>It is a reminder to courageously say “here I am.” To first, prior to anything, live the reality of being beloved.</p>
-      <p>Film photographs, short films and topographic maps from time spent outside: each one a note left on the trail, a small record that someone was here and was paying attention.</p>
-      <div class="pull">“here I am.”<small>the whole mission, in three words</small></div>
-    </div>
-    <figure>
-      <img src="/img/mission/front.jpg" srcset="/img/mission/front-800.jpg 800w, /img/mission/front.jpg 1600w" sizes="40vw" alt="A dirt turnout above a grey sea, a hand-painted sign reading No Motorcycles, No Fireworks, and a headland beyond.">
-      <figcaption>Frame 04 · 35mm · the coast, a grey morning</figcaption>
+  <div class="lead">
+    <figure class="lead__photo">
+      <img src="/img/mission/pigalle.jpg" srcset="/img/mission/pigalle-600.jpg 780w, /img/mission/pigalle.jpg 1040w" sizes="(max-width: 640px) 66vw, 26vw" alt="A neon sign reading Place Pigalle under an awning, with a ferry crossing grey water beyond.">
+      <figcaption>Frame 04 · Seattle · the ferry</figcaption>
     </figure>
-    <div class="box" style="grid-column: 2">
-      <h3 class="head">In this issue</h3>
-      <p style="margin:0 0 .6em"><b>Page 2</b> · Notes from the trail</p>
-      <p style="margin:0 0 .6em"><b>Page 3</b> · Why WAY.: the verses behind the name</p>
-      <p style="margin:0"><b>Maps</b> · Make a printable topo map of anywhere, at <span style="font-family:var(--mono)">/maps</span></p>
+    <div class="lead__text">
+      <span class="kicker">Mission</span>
+      <p class="statement"><span class="way">WAY<span class="tuck">.</span></span> exists as a reminder to live. Though we have never stopped living, it remains so easy to forget this simple task of living. It is a reminder to courageously say &ldquo;here I am.&rdquo; To first, prior to anything, live the reality of being beloved.</p>
     </div>
+  </div>
+  <hr class="rule">
+  <span class="kicker">Why WAY.</span>
+  <div class="verses">
+    <div class="verse"><p>Jesus answered, &ldquo;I am <span class="swash-u">the way<svg viewBox="0 0 290 29" preserveAspectRatio="none" aria-hidden="true"><path d="M287.0 6.0L283.0 2.0L261.0 2.0L259.0 4.0L243.0 4.0L242.0 5.0L215.0 6.0L214.0 7.0L201.0 7.0L200.0 8.0L180.0 8.0L179.0 9.0L161.0 9.0L160.0 10.0L130.0 10.0L129.0 11.0L99.0 11.0L98.0 12.0L65.0 12.0L64.0 13.0L48.0 13.0L47.0 14.0L30.0 14.0L29.0 15.0L20.0 15.0L19.0 16.0L8.0 16.0L5.0 18.0L2.0 18.0L2.0 22.0L4.0 23.0L26.0 23.0L27.0 22.0L46.0 22.0L47.0 21.0L146.0 20.0L147.0 19.0L180.0 19.0L181.0 18.0L222.0 17.0L224.0 16.0L226.0 18.0L225.0 23.0L228.0 26.0L241.0 26.0L243.0 24.0L250.0 23.0L254.0 21.0L257.0 21.0L261.0 19.0L264.0 19.0L268.0 17.0L272.0 17.0L276.0 15.0L280.0 15.0L283.0 13.0L285.0 13.0L287.0 12.0Z"/></svg></span> and the truth and the life. No one comes to the Father except through me.&rdquo;<cite>John 14:6 · NIV</cite></div>
+    <div class="verse"><p>This is what the <span class="lord">Lord</span> says: &ldquo;Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.&rdquo;<cite>Jeremiah 6:16 · NIV</cite></div>
+    <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19&ndash;20 · NIV</cite></div>
   </div>
   <div class="stamp stamp--front" aria-hidden="true">
     <svg viewBox="0 0 320 110"><defs><filter id="rough" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".055" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter></defs>
@@ -201,12 +208,12 @@ html.scrolled .hint { opacity: 0; }
       <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">LIVE LOVED</text><text x="160" y="84" text-anchor="middle" font-size="17" font-family="Fira Mono, monospace" letter-spacing="1">ζῆτε ἀγαπώμενοι</text></g>
     </svg>
   </div>
-  <div class="foot"><span>Page 1 of 3</span><span>scroll to turn the page</span></div>
+  <div class="foot"><span>Page 1 of 2</span><span>scroll to turn the page</span></div>
 </template>
 
 <template id="t-notes">
   <hr class="rule rule--double">
-  <div class="bar"><span>Field notes</span><i>✱</i><span>Journal</span><i>✱</i><span>Page 2</span></div>
+  <div class="bar"><span>Field notes</span><i>✱</i><span>Journal</span><i>✱</i><span class="today">—</span></div>
   <hr class="rule">
   <span class="kicker">Journal</span>
   <h2 class="head">Notes from the trail</h2>
@@ -224,36 +231,9 @@ html.scrolled .hint { opacity: 0; }
       <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">FIELD COPY</text><text x="160" y="84" text-anchor="middle" font-size="17">35MM · NO. 1</text></g>
     </svg>
   </div>
-  <div class="foot"><span>Page 2 of 3</span><span>scroll to turn the page</span></div>
+  <div class="foot"><span>Page 2 of 2</span><span lang="el" style="text-transform:none; font-family:'Fira Mono', monospace;">ζῆτε ἀγαπώμενοι · live loved</span></div>
 </template>
 
-<template id="t-why">
-  <hr class="rule rule--double">
-  <div class="bar"><span>Why WAY.</span><i>✱</i><span>The verses behind the name</span><i>✱</i><span>Page 3</span></div>
-  <hr class="rule">
-  <div class="grid" style="grid-template-columns: 1.25fr .75fr; margin-top: 2cqw;">
-    <div>
-      <span class="kicker" style="margin-top:0">Why WAY.</span>
-      <h2 class="head">The way, the paths, the light</h2>
-      <div class="cols cols--2">
-        <div class="verse"><p>Jesus answered, “I am <span class="swash-u">the way<svg viewBox="0 0 290 29" preserveAspectRatio="none" aria-hidden="true"><path d="M287.0 6.0L283.0 2.0L261.0 2.0L259.0 4.0L243.0 4.0L242.0 5.0L215.0 6.0L214.0 7.0L201.0 7.0L200.0 8.0L180.0 8.0L179.0 9.0L161.0 9.0L160.0 10.0L130.0 10.0L129.0 11.0L99.0 11.0L98.0 12.0L65.0 12.0L64.0 13.0L48.0 13.0L47.0 14.0L30.0 14.0L29.0 15.0L20.0 15.0L19.0 16.0L8.0 16.0L5.0 18.0L2.0 18.0L2.0 22.0L4.0 23.0L26.0 23.0L27.0 22.0L46.0 22.0L47.0 21.0L146.0 20.0L147.0 19.0L180.0 19.0L181.0 18.0L222.0 17.0L224.0 16.0L226.0 18.0L225.0 23.0L228.0 26.0L241.0 26.0L243.0 24.0L250.0 23.0L254.0 21.0L257.0 21.0L261.0 19.0L264.0 19.0L268.0 17.0L272.0 17.0L276.0 15.0L280.0 15.0L283.0 13.0L285.0 13.0L287.0 12.0Z"/></svg></span> and the truth and the life. No one comes to the Father except through me.”<cite>John 14:6 · NIV</cite></div>
-        <div class="verse"><p>This is what the <span class="lord">Lord</span> says: “Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.”<cite>Jeremiah 6:16 · NIV</cite></div>
-        <div class="verse"><p>Your word is a lamp for my feet, a light on my path.<cite>Psalm 119:105 · NIV</cite></div>
-        <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19–20 · NIV</cite></div>
-      </div>
-    </div>
-    <div class="box">
-      <h3 class="head">In the shell</h3>
-      <p class="greek" lang="el">ζῆτε<br>ἀγαπώμενοι</p>
-      <dl class="gloss">
-        <dt lang="el">ζῆτε</dt><dd>“live”: present, plural, a command. Keep living, all of you.</dd>
-        <dt lang="el">ἀγαπώμενοι</dt><dd>“being loved”: a passive participle. Not loving first; being loved first.</dd>
-      </dl>
-      <p style="margin:1.4cqw 0 0; font: 500 1.2cqw/1.5 var(--mono); letter-spacing:.14em; text-transform:uppercase;">The words that fill the chambers of the shell, from the centre outward.</p>
-    </div>
-  </div>
-  <div class="foot"><span>Page 3 of 3</span><span lang="el" style="text-transform:none; font-family:'Fira Mono', monospace;">ζῆτε ἀγαπώμενοι · live loved</span></div>
-</template>
 
 <div class="scroller" id="scroller" aria-hidden="true"></div>
 <p class="hint" aria-hidden="true">Scroll to turn the page</p>
@@ -271,12 +251,12 @@ html.scrolled .hint { opacity: 0; }
 
   // fill the pages from their templates (the fold variant draws each page twice, clipped into halves)
   const fill = (el, id) => { el.innerHTML = ''; el.appendChild(document.getElementById('t-' + id).content.cloneNode(true)); };
-  for (const id of ['front', 'notes', 'why']) {
+  for (const id of ['front', 'notes']) {
     fill(document.getElementById(id), id);
     document.querySelectorAll(`[data-copy="${id}"]`).forEach(el => fill(el, id));
   }
   // today's date in the bar
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+  const d = new Date(), two = n => String(n).padStart(2, '0'), today = `${two(d.getMonth() + 1)}.${two(d.getDate())}.${two(d.getFullYear() % 100)}`;
   document.querySelectorAll('.today').forEach(el => el.textContent = today);
 
   // ---- the page turn, driven by scroll ----
@@ -319,17 +299,17 @@ html.scrolled .hint { opacity: 0; }
   paint();
 
   // ---- the flicker in the masthead: the press warming up, then the wordmark lands ----
-  const words = [...document.querySelectorAll('.wordmark')];
+  const words = [...document.querySelectorAll('.wordmark')], logos = [...document.querySelectorAll('.mast__logo')];
   const FONTS = ['frijole','righteous','rubikwetpaint','sixtyfour','bigshouldersstencildisplay','wallpoet','anton','saira','librebarcode39text','majormonodisplay','monoton','fasterone','rubikglitch','playfairdisplay','lacquer','tiltprism','nosifer','bowlbyone','zentokyozoo','shrikhand','abrilfatface','trainone','rubikmicrobe','bungeeshade','monofett','bodonimoda','unifrakturmaguntia','pressstart2p'];
   const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`)); faces.forEach(f => document.fonts.add(f));
   const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), ...faces.map(f => f.load().catch(() => null))]);
   const wait = ms => new Promise(r => setTimeout(r, ms));
-  const land = () => words.forEach(w => { w.style.fontFamily = ''; w.style.opacity = ''; w.classList.remove('flick'); w.classList.add('is-on'); });
+  const land = () => { words.forEach(w => { w.style.fontFamily = ''; w.style.opacity = ''; w.classList.remove('flick'); }); logos.forEach(l => l.classList.add('is-on')); };
   let run = 0;
   async function flicker() {
     const id = ++run; land();
     const order = FONTS.slice().sort(() => Math.random() - .5), n = 26;
-    words.forEach(w => { w.classList.add('flick'); w.style.opacity = '0'; }); await wait(350);
+    logos.forEach(l => l.classList.remove('is-on')); words.forEach(w => { w.classList.add('flick'); w.style.opacity = '0'; }); await wait(350);
     for (let i = 0; i < n; i++) {
       if (id !== run) return;
       if (i === 9 || i === 17) { words.forEach(w => w.style.opacity = '0'); await wait(50); }
@@ -339,7 +319,7 @@ html.scrolled .hint { opacity: 0; }
     if (id === run) land();
   }
   Promise.race([ready, wait(8000).then(() => 'late')]).then(v => v === 'late' ? land() : flicker());
-  words.forEach(w => w.addEventListener('click', () => ready.then(flicker)));
+  logos.forEach(l => l.addEventListener('click', () => ready.then(flicker)));
 })();
 </script>
 </body>

@@ -87,12 +87,13 @@ main { z-index: 1; }
 .what .tuck { margin-left: -0.585em; }
 .what .swash { left: -4px; width: calc(100% + 10px); bottom: -4px; height: 9px; z-index: -1; transition: clip-path .7s cubic-bezier(.3, .7, .3, 1) .35s; }
 .pin--name.is-on .what .swash, .what:hover .swash, .what:focus-visible .swash { clip-path: inset(0 0 0 0); }
-.scene--verse .pin { align-items: start; padding-top: clamp(96px, 16svh, 180px); color: var(--ink); }
+.scene--verse .pin { align-items: start; padding-top: clamp(150px, 30svh, 320px); color: var(--ink); }   /* lower: nearer the middle of the sky */
+.scene--pin .frame { color: var(--ink); opacity: .8; }   /* frame numbers in ink on the two light photos */
 .scene--intro { min-height: 100svh; display: grid; align-items: center; padding: clamp(100px, 16svh, 160px) max(24px, env(safe-area-inset-left, 0px)) clamp(100px, 14svh, 160px); }
 @media (max-width: 640px) {
   .name-mark { width: auto; height: min(58svh, 520px); }
   .stage .s-peaks { object-position: 50% 40%; }
-  .scene--verse .pin { padding-top: 48px; }
+  .scene--verse .pin { padding-top: 22svh; }
   .scene--verse .verse p { font-size: 17px; line-height: 1.65; }
   .scene--verse .verse figcaption { margin-top: 18px; }
 }
