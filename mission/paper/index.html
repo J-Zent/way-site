@@ -27,21 +27,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .book { position: fixed; inset: 0; display: grid; place-items: center; perspective: 2600px; perspective-origin: 50% 50%;
 }
 .sheet { position: absolute; width: min(94vw, calc((100svh - 36px) * 0.72)); --sw: 1; aspect-ratio: 0.72; container-type: inline-size;
-  background: #E7DAC0; color: #1E1A16; overflow: hidden;
-  /* 4 · deckled, fibrous edges: the sheet is masked by a roughened rectangle */
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1000' preserveAspectRatio='none'%3E%3Cfilter id='d' x='-5%' y='-5%' width='110%' height='110%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.09' numOctaves='3' seed='4'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='6'/%3E%3C/filter%3E%3Crect x='6' y='6' width='708' height='988' fill='%23fff' filter='url(%23d)'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1000' preserveAspectRatio='none'%3E%3Cfilter id='d' x='-5%' y='-5%' width='110%' height='110%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.09' numOctaves='3' seed='4'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='6'/%3E%3C/filter%3E%3Crect x='6' y='6' width='708' height='988' fill='%23fff' filter='url(%23d)'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  background: #ECE4D3; color: #1A1714; overflow: hidden;
+  -webkit-mask: url(/img/paper/edge.png) center / 100% 100% no-repeat; mask: url(/img/paper/edge.png) center / 100% 100% no-repeat;   /* a barely fibrous edge */
   transform-style: preserve-3d; backface-visibility: hidden; will-change: transform; }
 /* newsprint: a faint fibre texture and a soft vignette at the edges */
-.sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; mix-blend-mode: multiply; opacity: 1;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='1200'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .005' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .96  0 0 0 0 .93  0 0 0 0 .86  0 0 0 .55 .45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E") center / 100% 100%,
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .9  0 0 0 0 .88  0 0 0 0 .84  0 0 0 .18 .82'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") 0 0 / 200px 200px,
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='900'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.03' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .5  0 0 0 0 .33  0 0 0 0 .16  -6 0 0 0 1.9'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23f)'/%3E%3C/svg%3E") center / 100% 100%,
-    radial-gradient(circle at 81% 74%, rgba(0,0,0,0) 0 8.6cqw, rgba(125, 85, 35, .16) 9cqw, rgba(125, 85, 35, .05) 9.6cqw, rgba(0,0,0,0) 10.4cqw),
-    radial-gradient(circle at 81% 74%, rgba(150, 110, 50, .07), rgba(0,0,0,0) 9cqw),
-    linear-gradient(to bottom, rgba(0,0,0,0) 49.5%, rgba(90, 60, 30, .12) 50%, rgba(255, 250, 235, .35) 50.25%, rgba(0,0,0,0) 51%),
-    radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(110, 75, 30, .32) 100%),
-    linear-gradient(115deg, rgba(125, 85, 35, .2), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(125, 85, 35, .16)); }
+.sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; background: url(/img/paper/newsprint.png) center / 100% 100%; }   /* gentle mottle, grain, a few faint age spots, browned edges: one plain image */
 .sheet .back { position: absolute; inset: 0; background: #E6DFD2; transform: rotateY(180deg); backface-visibility: hidden; }
 .page { position: absolute; inset: 0; padding: 4cqw 4.5cqw 4cqw; font-size: 2.05cqw; line-height: 1.55; backface-visibility: hidden; }
 
@@ -71,13 +61,9 @@ html[data-flip="fold"] .page--solo { display: none; }
 .stackshade { position: absolute; width: min(94vw, calc((100svh - 36px) * 0.72)); aspect-ratio: 0.72; background: #000; opacity: .55; filter: blur(14px);
   transform: translateY(1.4vmin) scale(1.015); will-change: transform; pointer-events: none; }   /* one soft shadow under the whole pile: drawn once, never redrawn */
 .flap, .cast { position: absolute; width: min(94vw, calc((100svh - 36px) * 0.72)); aspect-ratio: 0.72; pointer-events: none; visibility: hidden; transform-origin: 0 0; }
-.flap { filter: drop-shadow(0 0 10px rgba(0,0,0,.35)); }
-.flap__paper { position: absolute; inset: 0; background-color: #DFD1B6;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1000' preserveAspectRatio='none'%3E%3Cfilter id='d' x='-5%' y='-5%' width='110%' height='110%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.09' numOctaves='3' seed='4'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='6'/%3E%3C/filter%3E%3Crect x='6' y='6' width='708' height='988' fill='%23fff' filter='url(%23d)'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1000' preserveAspectRatio='none'%3E%3Cfilter id='d' x='-5%' y='-5%' width='110%' height='110%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.09' numOctaves='3' seed='4'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='6'/%3E%3C/filter%3E%3Crect x='6' y='6' width='708' height='988' fill='%23fff' filter='url(%23d)'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
-.flap__paper::after { content: ""; position: absolute; inset: 0; mix-blend-mode: multiply; opacity: .9;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='1200'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .004' numOctaves='3' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 .9  0 0 0 0 .85  0 0 0 0 .75  0 0 0 .6 .4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E") center / 100% 100%,
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='900'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.03' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .5  0 0 0 0 .33  0 0 0 0 .16  -6 0 0 0 1.9'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23f)'/%3E%3C/svg%3E") center / 100% 100%; }
-.cast { filter: blur(3px); }
+.flap__paper { position: absolute; inset: 0; background-color: #E3DAC6;
+  -webkit-mask: url(/img/paper/edge.png) center / 100% 100% no-repeat; mask: url(/img/paper/edge.png) center / 100% 100% no-repeat; }
+.flap__paper::after { content: ""; position: absolute; inset: 0; background: url(/img/paper/newsprint.png) center / 100% 100%; transform: scaleX(-1); }
 /* ---- the press: whole copies of the paper fly off the press onto the desk, each with WAY. in a different face ---- */
 .sheet.unprinted { opacity: 0; }
 .sheet.copy { z-index: 0; }
@@ -92,7 +78,7 @@ html[data-flip="fold"] .page--solo { display: none; }
 .mast__side { font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
 .mast__side:last-child { text-align: right; }
 .mast__side[lang="el"] { text-transform: none; font-family: "Fira Mono", var(--mono); letter-spacing: .06em; }
-.mast__logo { position: relative; width: 100%; margin: 0; background: none; color: inherit; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 1.4cqw 0 1.4cqw 1cqw; gap: 2.4cqw; }
+.mast__logo { position: relative; width: 100%; margin: 0; background: #141414; color: var(--paper); display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 1.6cqw 2.4cqw 1.6cqw 2.8cqw; gap: 2.2cqw; }
 .mast__logo img { grid-area: 1 / 1; display: block; width: 100%; height: auto; aspect-ratio: 1382 / 424; }   /* holds its shape before the image loads (the press copies are made early) */
 /* the volume information, turned on its side and reading upward, cut out of the plate */
 .mast__vol { grid-area: 1 / 2; writing-mode: vertical-rl; transform: rotate(180deg); font: 500 1.35cqw/1.6 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: inherit; border-right: .25cqw solid currentColor; padding-right: 1.1cqw; white-space: nowrap; }
@@ -105,7 +91,7 @@ html[data-flip="fold"] .page--solo { display: none; }
 .bar i { font-style: normal; }
 
 /* ---- stories ---- */
-.kicker { display: inline-block; font: 500 1.3cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; padding: .7cqw 1.2cqw; background: var(--ink); color: var(--paper); margin: 2.2cqw 0 1.2cqw; }
+.kicker { display: inline-block; align-self: flex-start; justify-self: start; width: fit-content; font: 500 1.3cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; padding: .7cqw 1.2cqw; background: var(--ink); color: var(--paper); margin: 2.2cqw 0 1.2cqw; }
 h1.head { margin: 0 0 1.2cqw; font: 400 12cqw/.92 var(--head); letter-spacing: -.005em; text-transform: uppercase; }
 h2.head { margin: 0 0 .8cqw; font: 400 4.2cqw/.95 var(--head); text-transform: uppercase; }
 h3.head { margin: 0 0 .6cqw; font: 400 2.6cqw/1 var(--head); text-transform: uppercase; }
@@ -153,9 +139,9 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .swash-u svg { position: absolute; left: -2%; width: 104%; bottom: -.35em; height: .5em; fill: var(--lemon); z-index: -1; }
 
 /* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
-.stamp { position: absolute; z-index: 4; color: var(--blush); mix-blend-mode: multiply; opacity: .92; pointer-events: none; }
+.stamp { position: absolute; z-index: 4; opacity: .9; pointer-events: none; }
+.shellstamp { position: absolute; z-index: 4; width: 14cqw; opacity: 1; pointer-events: none; }
 .stamp svg { width: 100%; height: auto; display: block; }
-.stamp--front { right: 1.2cqw; top: 1.6cqw; width: 19cqw; transform: rotate(-8deg); }   /* pinned to the photo: in the light sky at its top right */   /* across the photo's corner, like a stamp on a print */
 .stamp--inside { right: 7cqw; bottom: 9cqw; width: 22cqw; transform: rotate(5deg); }
 
 /* ---- which flip: a small switch, and the scroll hint ---- */
@@ -181,7 +167,6 @@ html.scrolled .hint { opacity: 0; }
   .verses .verse { border-left: 0; padding-left: 0; }
   .mast__logo { padding: 2.6cqw 2.4cqw 2.6cqw 3cqw; }
   .mast__vol { font-size: 1.6cqw; }
-  .stamp--front { right: 4cqw; top: 4cqw; width: 24cqw; }
   .verses { font-size: 2.5cqw; }
   .foot { bottom: 2cqw; }
   .foot span:last-child { max-width: 50%; text-align: right; }
@@ -217,21 +202,15 @@ html.scrolled .hint { opacity: 0; }
 <template id="t-front">
   <hr class="rule rule--double">
   <div class="mast">
-    <div class="mast__logo"><img src="/img/logo/way-topo-row-black.svg" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1</div><p class="mast__type" aria-hidden="true">WAY.</p></div>
+    <div class="mast__logo"><img src="/img/logo/way-topo-plate.svg" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1</div><p class="mast__type" aria-hidden="true">WAY.</p></div>
   </div>
   <hr class="rule rule--double">
   <div class="bar"><span lang="el">ζῆτε ἀγαπώμενοι</span><i>✱</i><span>live loved</span><i>✱</i><span class="today">—</span></div>
   <hr class="rule">
   <div class="lead">
     <figure class="lead__photo">
-      <img src="/img/mission/pigalle.jpg" srcset="/img/mission/pigalle-600.jpg 780w, /img/mission/pigalle.jpg 1040w" sizes="(max-width: 640px) 66vw, 26vw" alt="A neon sign reading Place Pigalle under an awning, with a ferry crossing grey water beyond.">
+      <img src="/img/mission/pigalle.png" srcset="/img/mission/pigalle-780.png 780w, /img/mission/pigalle.png 1040w" sizes="(max-width: 640px) 66vw, 26vw" alt="A neon sign reading Place Pigalle under an awning, with a ferry crossing grey water beyond.">
       <figcaption>Frame 04 · Sony DSC-HX400V · ISO 80 · ƒ/3.5 · 1/320</figcaption>
-      <div class="stamp stamp--front" aria-hidden="true">
-        <svg viewBox="0 0 320 110"><defs><filter id="rough" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".055" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter></defs>
-          <g filter="url(#rough)" fill="none" stroke="currentColor" stroke-width="5"><rect x="6" y="6" width="308" height="98" rx="10"/></g>
-          <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">LIVE LOVED</text><text x="160" y="84" text-anchor="middle" font-size="17" font-family="Fira Mono, monospace" letter-spacing="1">ζῆτε ἀγαπώμενοι</text></g>
-        </svg>
-      </div>
     </figure>
     <div class="lead__text">
       <span class="kicker">Mission</span>
@@ -258,16 +237,12 @@ html.scrolled .hint { opacity: 0; }
   <div class="cols cols--3">
     <div class="entry"><p class="date">Entry 01 · place · date</p><p>Placeholder text for the first entry. A short account of a morning: where we started, what the light did on the water, the moment someone stopped walking and just looked. Two or three paragraphs at most, written plainly.</p></div>
     <div class="entry"><p class="date">Entry 02 · place · date</p><p>Placeholder for a second entry. This one might be about a map: the ridge we traced with a finger the night before, and how different it felt underfoot. Room here for a small photograph, printed in black and white.</p></div>
-    <figure><img src="/img/mission/front-800.jpg" alt="" aria-hidden="true"><figcaption>Frame 05 · 35mm film</figcaption></figure>
+    <figure><img src="/img/mission/front-800.png" alt="" aria-hidden="true"><figcaption>Frame 05 · 35mm film</figcaption></figure>
     <div class="entry"><p class="date">Entry 03 · place · date</p><p>Placeholder for a third entry. Shorter. A single thought carried home from a long day, set down before it fades. The kind of note you find later in a jacket pocket.</p></div>
     <div class="entry"><p class="date">Entry 04 · place · date</p><p>Placeholder for a fourth entry, or a reader's letter, or a list: things seen, things learned, things to go back for. The column format is forgiving about length.</p></div>
     <div class="pull">“ask where the good way is, and walk in it”<small>Jeremiah 6:16</small></div>
   </div>
-  <div class="stamp stamp--inside" aria-hidden="true">
-    <svg viewBox="0 0 320 110"><g filter="url(#rough)" fill="none" stroke="currentColor" stroke-width="5"><rect x="6" y="6" width="308" height="98" rx="10"/></g>
-      <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">FIELD COPY</text><text x="160" y="84" text-anchor="middle" font-size="17">35MM · NO. 1</text></g>
-    </svg>
-  </div>
+  <img class="stamp stamp--inside" src="/img/paper/field-stamp.png" alt="" aria-hidden="true">
   <div class="foot"><span>Page 2 of 2</span><span lang="el" style="text-transform:none; font-family:'Fira Mono', monospace;">ζῆτε ἀγαπώμενοι · live loved</span></div>
 </template>
 
@@ -361,7 +336,7 @@ html.scrolled .hint { opacity: 0; }
     paper.style.clipPath = lifted;
     paper.style.backgroundImage = `linear-gradient(${ang + 4}deg, rgba(60,40,15,.22) ${tM}%, rgba(60,40,15,.08) ${tM + 3}%, rgba(255,250,235,.16) ${tM + 11}%, rgba(255,250,235,.04) ${tM + 22}%, rgba(60,40,15,.1) ${tM + 48}%), linear-gradient(${ang - 7}deg, rgba(0,0,0,0) ${tM + 6}%, rgba(60,40,15,.06) ${tM + 16}%, rgba(0,0,0,0) ${tM + 30}%)`;
     c.style.clipPath = lifted;
-    c.style.background = `linear-gradient(${ang - 3}deg, rgba(20,12,4,.36) ${tM}%, rgba(20,12,4,.12) ${tM + 5}%, rgba(0,0,0,0) ${tM + 13}%)`;
+    c.style.background = `linear-gradient(${ang - 3}deg, rgba(20,12,4,.3) ${tM}%, rgba(20,12,4,.14) ${tM + 4}%, rgba(20,12,4,.04) ${tM + 10}%, rgba(0,0,0,0) ${tM + 16}%)`;
     const z = N - i + 10;
     c.style.zIndex = z - 1; f.style.zIndex = z + 1;
     f.style.visibility = c.style.visibility = 'visible';
@@ -390,6 +365,26 @@ html.scrolled .hint { opacity: 0; }
       { transform: T(0), opacity: 1 }
     ], { duration: dur, fill: 'forwards' });
   };
+  // size a face so its WAY. fills the same box as the topo logo (as wide as it, never much taller)
+  function fitType(el, box) {
+    el.style.fontSize = '100px';
+    const r = document.createRange(); r.selectNodeContents(el); const t = r.getBoundingClientRect();
+    const k = Math.min(box.offsetWidth * .98 / t.width, box.offsetHeight * 1.18 / t.height);
+    el.style.fontSize = (100 * k).toFixed(1) + 'px';
+  }
+  // the shell, stamped by hand once the real paper is on top: a little off each time
+  function stamp() {
+    const page = document.getElementById('front');
+    page.querySelectorAll('.shellstamp').forEach(x => x.remove());
+    const st = document.createElement('img'); st.className = 'shellstamp'; st.src = '/img/paper/shell-stamp.png'; st.alt = ''; st.setAttribute('aria-hidden', 'true');
+    const verses = page.querySelector('.verses'), pw = page.offsetWidth;
+    const top = verses.offsetTop - pw * .16;                                     // just above the verses, over the rule
+    st.style.left = (pw * (.64 + Math.random() * .16)) + 'px'; st.style.top = (top + (Math.random() - .5) * pw * .05) + 'px';
+    const rot = (Math.random() - .5) * 26;
+    page.appendChild(st);
+    st.animate([{ transform: `rotate(${rot}deg) scale(1.25)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.97)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
+      { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
+  }
   let run = 0;
   async function press() {
     const id = ++run;
@@ -404,15 +399,16 @@ html.scrolled .hint { opacity: 0; }
       const c = document.createElement('div'); c.className = 'sheet copy'; c.setAttribute('aria-hidden', 'true');
       c.innerHTML = '<div class="page">' + plate + '</div>';
       c.querySelectorAll('.stamp').forEach(x => x.remove());                 // stamps go on by hand, after printing
-      c.querySelector('.mast__type').style.fontFamily = `'flick-${order[k % order.length]}'`;
+      const type = c.querySelector('.mast__type'); type.style.fontFamily = `'flick-${order[k % order.length]}'`;
       book.insertBefore(c, sheets[0]);                                        // each new copy on top of the last, under the real paper
-      slam(c, 300 - 150 * t, rnd(-2.5, 2.5), rnd(-1.6, 1.6), rnd(-4, 4));
-      const copies = book.querySelectorAll('.copy'); if (copies.length > 9) copies[0].remove();   // only the top of the pile is ever seen
+      fitType(type, c.querySelector('.mast__logo img'));
+      slam(c, 300 - 150 * t, rnd(-2, 2), rnd(-1.2, 1.2), rnd(-2.5, 2.5));
+      const copies = book.querySelectorAll('.copy'); if (copies.length > 4) copies[0].remove();   // a short pile keeps page turns light   // only the top of the pile is ever seen
       await wait(230 - 175 * t);
     }
     if (id !== run) return;
     sheets.forEach(s => s.classList.remove('unprinted'));
-    slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; } });
+    slam(sheets[0], 420, 0, 0, 0).finished.then(() => { if (id === run) { sheets[0].getAnimations().forEach(a => a.cancel()); sheets[0].style.transformOrigin = ''; setTimeout(stamp, 380); } });
   }
   Promise.race([ready, wait(8000).then(() => 'late')]).then(v => { if (v !== 'late') press(); });
   document.querySelectorAll('.mast__logo').forEach(l => { l.style.cursor = 'pointer'; l.addEventListener('click', () => ready.then(press)); });
