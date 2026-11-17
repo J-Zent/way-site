@@ -121,8 +121,10 @@ html.scrolled .hint { opacity: 0; }
   .sheet { width: 94vw; aspect-ratio: 0.62; }
   .page { font-size: 2.6cqw; }
   .grid--front { grid-template-columns: 1fr; }
-  .grid--front .cols { grid-row: auto; columns: 1; }
+  .grid--front .cols { grid-row: auto; column-count: 1; }
+  .grid--front figure { order: -1; }
   .grid--front .box { grid-column: auto; }
+  h1.head { font-size: 15cqw; }
   .cols--3 { columns: 2; }
 }
 </style>
