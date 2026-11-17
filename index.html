@@ -89,6 +89,9 @@ main { z-index: 1; }
 .pin--name.is-on .what .swash, .what:hover .swash, .what:focus-visible .swash { clip-path: inset(0 0 0 0); }
 .scene--verse .pin { align-items: start; padding-top: clamp(150px, 30svh, 320px); color: var(--ink); }   /* lower: nearer the middle of the sky */
 .scene--pin .frame { color: var(--ink); opacity: .8; }   /* frame numbers in ink on the two light photos */
+/* the pinned slides are 100svh tall, which on a phone with its toolbar tucked away stops short of the screen's bottom edge;
+   drop the frame number by the difference so it sits as low as Frame 01's */
+.scene--pin .frame { bottom: calc(22px + env(safe-area-inset-bottom, 0px) - (100dvh - 100svh)); }
 .scene--intro { min-height: 100svh; display: grid; align-items: center; padding: clamp(100px, 16svh, 160px) max(24px, env(safe-area-inset-left, 0px)) clamp(100px, 14svh, 160px); }
 @media (max-width: 640px) {
   .name-mark { width: auto; height: min(58svh, 520px); }
