@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-flip="curl">
+<html lang="en" data-flip="peel">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -58,18 +58,32 @@ html[data-flip="fold"] .sheet > .back { display: none; }
 html:not([data-flip="fold"]) .half { display: none; }
 html[data-flip="fold"] .page--solo { display: none; }
 
+/* ---- the peel: a fold line travels in from the bottom-right corner. The sheet is clipped to what is still flat;
+   the lifted flap is a mirror image of the cut-away part (showing the paper's back), reflected across the fold;
+   the cast shadow darkens the page beneath, along the fold. ---- */
+.flap, .cast { position: absolute; width: min(94vw, calc((100svh - 36px) * 0.72)); aspect-ratio: 0.72; pointer-events: none; visibility: hidden; transform-origin: 0 0; }
+.flap { filter: drop-shadow(0 0 10px rgba(0,0,0,.35)); }
+.flap__paper { position: absolute; inset: 0; background-color: #E3DCCD; }
+/* ---- the press: whole copies of the paper fly off the press onto the desk, each with WAY. in a different face ---- */
+.sheet.unprinted { opacity: 0; }
+.sheet.copy { z-index: 0; }
+.copy .mast__logo img { visibility: hidden; }
+.copy .mast__type { display: grid; }
+.mast__type { display: none; position: absolute; inset: 0 7cqw 0 0; place-items: center; font: 400 12cqw/1 var(--mark); white-space: nowrap; overflow: hidden; color: var(--paper); }
+
 /* ---- masthead ---- */
 .rule { border: 0; border-top: .35cqw solid var(--ink); margin: 0; }
 .rule--double { border-top-width: .25cqw; border-bottom: .25cqw solid var(--ink); height: .55cqw; }
-.mast { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2cqw; padding: 1.6cqw 0 1.2cqw; }
+.mast { display: block; padding: .9cqw 0 .8cqw; }
 .mast__side { font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
 .mast__side:last-child { text-align: right; }
 .mast__side[lang="el"] { text-transform: none; font-family: "Fira Mono", var(--mono); letter-spacing: .06em; }
-.mast__logo { position: relative; width: 58cqw; margin: 0 auto; }
-.mast__logo img { display: block; width: 100%; height: auto; visibility: hidden; }
-.mast__logo.is-on img { visibility: visible; }
-.wordmark { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 15cqw/1 var(--mark); letter-spacing: -.01em; white-space: nowrap; text-align: center; visibility: hidden; }
-.wordmark.flick { visibility: visible; }
+.mast__logo { position: relative; width: 100%; margin: 0; background: var(--ink); color: var(--paper); display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 1.7cqw 2.4cqw 1.7cqw 3cqw; gap: 2cqw; }
+.mast__logo img { display: block; width: 100%; height: auto; }
+/* the volume information, turned on its side and reading upward, cut out of the plate */
+.mast__vol { writing-mode: vertical-rl; transform: rotate(180deg); font: 500 1.35cqw/1.6 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--paper); border-right: .25cqw solid var(--paper); padding-right: 1.1cqw; white-space: nowrap; }
+.mast__vol span[lang="el"] { text-transform: none; font-family: "Fira Mono", var(--mono); letter-spacing: .06em; }
+/* the press: copies flip out over the plate, each with a different face, until the topo WAY. is the one left on top */
 .wordmark .tuck { display: inline-block; margin-left: -.206em; }
 .wordmark.flick .tuck { margin-left: 0; }
 .bar { display: flex; justify-content: space-between; align-items: center; gap: 1.5cqw; padding: .9cqw 0; font: 500 1.35cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
@@ -92,10 +106,11 @@ figure img { display: block; width: 100%; height: auto; }
 figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
 .pull { margin: 1.4cqw 0; padding: 1.6cqw 1.8cqw; border: .3cqw solid var(--flame); color: var(--ink); text-align: center; font: 400 3cqw/1.25 var(--body); break-inside: avoid; }
 .pull small { display: block; margin-top: .8cqw; font: 500 1.2cqw/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--flame); }
-.lead { display: grid; grid-template-columns: 36cqw 1fr; gap: 3.2cqw; align-items: center; margin: 2.2cqw 0 2.4cqw; }
+.lead { display: grid; grid-template-columns: 30cqw 1fr; gap: 3.2cqw; align-items: center; margin: 1.8cqw 0 1.8cqw; }
+.lead__photo { position: relative; }
 .lead .kicker { margin: 0 0 1.4cqw; }
-.statement { margin: 0; font-size: 2.35cqw; line-height: 1.6; text-wrap: pretty; }
-.verses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; margin-top: .4cqw; }
+.statement { margin: 0; font-size: 2.3cqw; line-height: 1.55; text-wrap: pretty; }
+.verses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; margin-top: .4cqw; font-size: 1.9cqw; line-height: 1.5; }
 .verses .verse { border-left: .18cqw solid var(--ink); padding-left: 1.6cqw; }
 .verses .verse:first-child { border-left: 0; padding-left: 0; }
 .grid { display: grid; gap: 2.4cqw; }
@@ -121,7 +136,7 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 /* ---- the stamp: blush-pink roller ink, pressed on a little crooked, bleeding into the paper ---- */
 .stamp { position: absolute; z-index: 4; color: var(--blush); mix-blend-mode: multiply; opacity: .92; pointer-events: none; }
 .stamp svg { width: 100%; height: auto; display: block; }
-.stamp--front { left: 22cqw; top: 29cqw; width: 22cqw; transform: rotate(-8deg); }   /* across the photo's corner, like a stamp on a print */
+.stamp--front { right: -11cqw; top: -2.5cqw; width: 22cqw; transform: rotate(-8deg); }   /* pinned to the photo: across its top corner */   /* across the photo's corner, like a stamp on a print */
 .stamp--inside { right: 7cqw; bottom: 9cqw; width: 22cqw; transform: rotate(5deg); }
 
 /* ---- which flip: a small switch, and the scroll hint ---- */
@@ -134,17 +149,19 @@ html.scrolled .hint { opacity: 0; }
 @media (max-width: 640px) {
   .switch { right: 12px; bottom: 54px; }
   .book { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
-  .sheet { width: 94vw; aspect-ratio: 0.46; }
+  .sheet, .flap, .cast { width: 94vw; aspect-ratio: 0.43; }
   .page { font-size: 2.6cqw; }
   .lead { grid-template-columns: 1fr; gap: 2.4cqw; }
-  .lead__photo { width: 58%; margin: 0 auto; }
+  .lead__photo { width: 50%; margin: 0 auto; }
   .statement { font-size: 2.75cqw; line-height: 1.5; }
   .page { padding-top: 3cqw; }
   .verses { grid-template-columns: 1fr 1fr; gap: 2.4cqw; }
   .verses .verse:last-child { grid-column: 1 / -1; }
   .verses .verse { border-left: 0; padding-left: 0; }
-  .mast__logo { width: 64cqw; }
-  .stamp--front { left: auto; right: 8cqw; top: 40cqw; }
+  .mast__logo { padding: 2.6cqw 2.4cqw 2.6cqw 3cqw; }
+  .mast__vol { font-size: 1.6cqw; }
+  .stamp--front { right: -26cqw; top: 4cqw; width: 24cqw; }
+  .verses { font-size: 2.5cqw; }
   .foot { bottom: 2cqw; }
   .foot span:last-child { max-width: 50%; text-align: right; }
   .cols--3 { columns: 2; }
@@ -178,9 +195,7 @@ html.scrolled .hint { opacity: 0; }
 <template id="t-front">
   <hr class="rule rule--double">
   <div class="mast">
-    <div class="mast__side">Vol. 1 · No. 1</div>
-    <div class="mast__logo"><img src="/img/logo/way-topo-row-black.svg" width="1382" height="424" alt="WAY."><p class="wordmark" aria-hidden="true">WAY.</p></div>
-    <div class="mast__side" lang="el">ζῆτε ἀγαπώμενοι</div>
+    <div class="mast__logo"><img src="/img/logo/way-topo-row-white.svg" width="1382" height="424" alt="WAY."><div class="mast__vol">Vol. 1 · No. 1 &nbsp;✱&nbsp; <span lang="el">ζῆτε ἀγαπώμενοι</span></div><p class="mast__type" aria-hidden="true">WAY.</p></div>
   </div>
   <hr class="rule rule--double">
   <div class="bar"><span>A reminder to live</span><i>✱</i><span lang="el">live loved</span><i>✱</i><span class="today">—</span></div>
@@ -189,6 +204,12 @@ html.scrolled .hint { opacity: 0; }
     <figure class="lead__photo">
       <img src="/img/mission/pigalle.jpg" srcset="/img/mission/pigalle-600.jpg 780w, /img/mission/pigalle.jpg 1040w" sizes="(max-width: 640px) 66vw, 26vw" alt="A neon sign reading Place Pigalle under an awning, with a ferry crossing grey water beyond.">
       <figcaption>Frame 04 · Seattle · the ferry</figcaption>
+      <div class="stamp stamp--front" aria-hidden="true">
+        <svg viewBox="0 0 320 110"><defs><filter id="rough" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".055" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter></defs>
+          <g filter="url(#rough)" fill="none" stroke="currentColor" stroke-width="5"><rect x="6" y="6" width="308" height="98" rx="10"/></g>
+          <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">LIVE LOVED</text><text x="160" y="84" text-anchor="middle" font-size="17" font-family="Fira Mono, monospace" letter-spacing="1">ζῆτε ἀγαπώμενοι</text></g>
+        </svg>
+      </div>
     </figure>
     <div class="lead__text">
       <span class="kicker">Mission</span>
@@ -201,12 +222,6 @@ html.scrolled .hint { opacity: 0; }
     <div class="verse"><p>Jesus answered, &ldquo;I am <span class="swash-u">the way<svg viewBox="0 0 290 29" preserveAspectRatio="none" aria-hidden="true"><path d="M287.0 6.0L283.0 2.0L261.0 2.0L259.0 4.0L243.0 4.0L242.0 5.0L215.0 6.0L214.0 7.0L201.0 7.0L200.0 8.0L180.0 8.0L179.0 9.0L161.0 9.0L160.0 10.0L130.0 10.0L129.0 11.0L99.0 11.0L98.0 12.0L65.0 12.0L64.0 13.0L48.0 13.0L47.0 14.0L30.0 14.0L29.0 15.0L20.0 15.0L19.0 16.0L8.0 16.0L5.0 18.0L2.0 18.0L2.0 22.0L4.0 23.0L26.0 23.0L27.0 22.0L46.0 22.0L47.0 21.0L146.0 20.0L147.0 19.0L180.0 19.0L181.0 18.0L222.0 17.0L224.0 16.0L226.0 18.0L225.0 23.0L228.0 26.0L241.0 26.0L243.0 24.0L250.0 23.0L254.0 21.0L257.0 21.0L261.0 19.0L264.0 19.0L268.0 17.0L272.0 17.0L276.0 15.0L280.0 15.0L283.0 13.0L285.0 13.0L287.0 12.0Z"/></svg></span> and the truth and the life. No one comes to the Father except through me.&rdquo;<cite>John 14:6 · NIV</cite></div>
     <div class="verse"><p>This is what the <span class="lord">Lord</span> says: &ldquo;Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.&rdquo;<cite>Jeremiah 6:16 · NIV</cite></div>
     <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19&ndash;20 · NIV</cite></div>
-  </div>
-  <div class="stamp stamp--front" aria-hidden="true">
-    <svg viewBox="0 0 320 110"><defs><filter id="rough" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".055" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter></defs>
-      <g filter="url(#rough)" fill="none" stroke="currentColor" stroke-width="5"><rect x="6" y="6" width="308" height="98" rx="10"/></g>
-      <g filter="url(#rough)" fill="currentColor" font-family="DM Mono, monospace" font-weight="500" letter-spacing="3"><text x="160" y="48" text-anchor="middle" font-size="26">LIVE LOVED</text><text x="160" y="84" text-anchor="middle" font-size="17" font-family="Fira Mono, monospace" letter-spacing="1">ζῆτε ἀγαπώμενοι</text></g>
-    </svg>
   </div>
   <div class="foot"><span>Page 1 of 2</span><span>scroll to turn the page</span></div>
 </template>
@@ -238,14 +253,14 @@ html.scrolled .hint { opacity: 0; }
 <div class="scroller" id="scroller" aria-hidden="true"></div>
 <p class="hint" aria-hidden="true">Scroll to turn the page</p>
 <nav class="switch" aria-label="Page turn style">
-  <a href="?flip=curl" data-flip="curl">Curl</a>
+  <a href="?flip=peel" data-flip="peel">Peel</a>
   <a href="?flip=fold" data-flip="fold">Fold</a>
 </nav>
 
 <script>
 (() => {
   const root = document.documentElement;
-  const flip = new URLSearchParams(location.search).get('flip') === 'fold' ? 'fold' : 'curl';
+  const flip = new URLSearchParams(location.search).get('flip') === 'fold' ? 'fold' : 'peel';
   root.dataset.flip = flip;
   document.querySelectorAll('.switch a').forEach(a => { if (a.dataset.flip === flip) a.setAttribute('aria-current', 'true'); });
 
@@ -260,7 +275,7 @@ html.scrolled .hint { opacity: 0; }
   document.querySelectorAll('.today').forEach(el => el.textContent = today);
 
   // ---- the page turn, driven by scroll ----
-  const sheets = [...document.querySelectorAll('.sheet')], N = sheets.length;
+  const book = document.getElementById('book'), sheets = [...document.querySelectorAll('.sheet')], N = sheets.length;
   const SLOT = 1.35;                                   // screens of scrolling per page (a hold, then the turn)
   document.getElementById('scroller').style.height = ((N - 1) * SLOT * 100 + 100) + 'svh';
   const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -276,13 +291,8 @@ html.scrolled .hint { opacity: 0; }
       const e = ease(p);
       s.style.zIndex = N - i + (p > 0 && p < 1 ? 10 : 0);
       s.style.visibility = p >= 1 ? 'hidden' : 'visible';
-      if (flip === 'curl') {
-        // like a book: the sheet swings around its left edge and away; the shadow deepens mid-turn
-        s.style.transformOrigin = '0% 50%';
-        s.style.transform = `rotateY(${-178 * e}deg)`;
-        s.style.boxShadow = `0 2cqw 6cqw rgba(0,0,0,${.45 + .3 * Math.sin(Math.PI * e)})`;
-        s.style.filter = `brightness(${1 - .22 * Math.sin(Math.PI * e)})`;
-      } else {
+      if (flip === 'peel') peel(s, i, p, e);
+      else {
         // a fold: the bottom half folds up over the top (first 60%), then the folded sheet slides up and off
         const f = Math.min(1, e / .6), g = Math.max(0, (e - .6) / .4);
         const bottom = s.querySelector('.half--bottom');
@@ -294,32 +304,88 @@ html.scrolled .hint { opacity: 0; }
       }
     });
   }
+  // paint() needs peel() and the flaps, defined just below: it first runs after them
+  // one flap and one cast shadow per sheet (the last sheet never turns)
+  const flaps = sheets.map(() => { const f = document.createElement('div'); f.className = 'flap'; f.innerHTML = '<div class="flap__paper"></div>'; book.appendChild(f); return f; });
+  const casts = sheets.map(() => { const c = document.createElement('div'); c.className = 'cast'; book.appendChild(c); return c; });
+  // the corner is pulled up and a little to the left: the fold line stays square to that direction
+  const U = (() => { const x = -0.42, y = -0.91, l = Math.hypot(x, y); return [x / l, y / l]; })();
+  function halfPlane(W, H, keep) {   // the sheet rectangle cut by the fold line; keep(x, y) >= 0 is the side kept
+    const pts = [[0, 0], [W, 0], [W, H], [0, H]], out = [];
+    for (let k = 0; k < 4; k++) {
+      const a = pts[k], b = pts[(k + 1) % 4], fa = keep(...a), fb = keep(...b);
+      if (fa >= 0) out.push(a);
+      if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+    }
+    return out.length ? 'polygon(' + out.map(q => `${q[0].toFixed(1)}px ${q[1].toFixed(1)}px`).join(',') + ')' : 'polygon(0 0,0 0,0 0)';
+  }
+  function peel(s, i, p, e) {
+    const f = flaps[i], c = casts[i];
+    if (p <= 0 || p >= 1) { s.style.clipPath = ''; f.style.visibility = c.style.visibility = 'hidden'; return; }
+    const W = s.offsetWidth, H = s.offsetHeight, [ux, uy] = U;
+    const smax = -W * ux - H * uy;                     // how far the fold must travel to clear the far corner
+    const sd = e * smax * 1.01;
+    const dist = (x, y) => (x - W) * ux + (y - H) * uy; // distance from the corner along the pull
+    s.style.clipPath = halfPlane(W, H, (x, y) => dist(x, y) - sd);
+    const lifted = halfPlane(W, H, (x, y) => sd - dist(x, y));
+    // reflection across the fold line (normal U, through M)
+    const Mx = W + ux * sd, My = H + uy * sd, md = Mx * ux + My * uy;
+    f.style.transform = `matrix(${1 - 2 * ux * ux}, ${-2 * ux * uy}, ${-2 * ux * uy}, ${1 - 2 * uy * uy}, ${2 * md * ux}, ${2 * md * uy})`;
+    // shading runs from the crease toward the corner
+    const ang = Math.atan2(-ux, uy) * 180 / Math.PI, dx = -ux, dy = -uy;
+    const L = Math.abs(W * dx) + Math.abs(H * dy), tM = ((Mx - W / 2) * dx + (My - H / 2) * dy) / L * 100 + 50;
+    const paper = f.firstChild;
+    paper.style.clipPath = lifted;
+    paper.style.backgroundImage = `linear-gradient(${ang}deg, rgba(0,0,0,.2) ${tM}%, rgba(0,0,0,.05) ${tM + 4}%, rgba(255,255,255,.18) ${tM + 14}%, rgba(0,0,0,.06) ${tM + 40}%)`;
+    c.style.clipPath = lifted;
+    c.style.background = `linear-gradient(${ang}deg, rgba(0,0,0,.42) ${tM}%, rgba(0,0,0,0) ${tM + 9}%)`;
+    const z = N - i + 10;
+    c.style.zIndex = z - 1; f.style.zIndex = z + 1;
+    f.style.visibility = c.style.visibility = 'visible';
+  }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(paint); } }, { passive: true });
+
   addEventListener('resize', paint);
   paint();
 
-  // ---- the flicker in the masthead: the press warming up, then the wordmark lands ----
-  const words = [...document.querySelectorAll('.wordmark')], logos = [...document.querySelectorAll('.mast__logo')];
+  // ---- the press: copy after copy of the paper flies off the press and lands on the desk a little crooked, each with
+  //      WAY. set in a different face, faster and faster, until the real paper (the topo WAY.) lands square on top ----
   const FONTS = ['frijole','righteous','rubikwetpaint','sixtyfour','bigshouldersstencildisplay','wallpoet','anton','saira','librebarcode39text','majormonodisplay','monoton','fasterone','rubikglitch','playfairdisplay','lacquer','tiltprism','nosifer','bowlbyone','zentokyozoo','shrikhand','abrilfatface','trainone','rubikmicrobe','bungeeshade','monofett','bodonimoda','unifrakturmaguntia','pressstart2p'];
   const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`)); faces.forEach(f => document.fonts.add(f));
   const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), ...faces.map(f => f.load().catch(() => null))]);
   const wait = ms => new Promise(r => setTimeout(r, ms));
-  const land = () => { words.forEach(w => { w.style.fontFamily = ''; w.style.opacity = ''; w.classList.remove('flick'); }); logos.forEach(l => l.classList.add('is-on')); };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const plate = document.getElementById('front').innerHTML;   // the front page, as printed
+  const fly = (el, dur, end) => el.animate([
+    { transform: `translate(${rnd(-4, 4)}%, -70%) rotate(${rnd(-14, 14)}deg) scale(1.04)`, opacity: .2 },
+    { transform: end, opacity: 1 }
+  ], { duration: dur, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
   let run = 0;
-  async function flicker() {
-    const id = ++run; land();
-    const order = FONTS.slice().sort(() => Math.random() - .5), n = 26;
-    logos.forEach(l => l.classList.remove('is-on')); words.forEach(w => { w.classList.add('flick'); w.style.opacity = '0'; }); await wait(350);
-    for (let i = 0; i < n; i++) {
+  async function press() {
+    const id = ++run;
+    if (scrollY > 2) scrollTo(0, 0);
+    book.querySelectorAll('.copy').forEach(c => c.remove());
+    sheets.forEach(s => s.classList.add('unprinted'));
+    const order = FONTS.slice().sort(() => Math.random() - .5), n = 20;
+    await wait(300);
+    for (let k = 0; k < n; k++) {
       if (id !== run) return;
-      if (i === 9 || i === 17) { words.forEach(w => w.style.opacity = '0'); await wait(50); }
-      words.forEach(w => { w.style.fontFamily = `'flick-${order[i % order.length]}'`; w.style.opacity = '1'; });
-      const t = i / (n - 1); await wait(40 + 120 * t * t);
+      const t = k / (n - 1);
+      const c = document.createElement('div'); c.className = 'sheet copy'; c.setAttribute('aria-hidden', 'true');
+      c.innerHTML = '<div class="page">' + plate + '</div>';
+      c.querySelectorAll('.stamp').forEach(x => x.remove());                 // stamps go on by hand, after printing
+      c.querySelector('.mast__type').style.fontFamily = `'flick-${order[k % order.length]}'`;
+      book.insertBefore(c, sheets[0]);                                        // each new copy on top of the last, under the real paper
+      fly(c, 240 - 130 * t, `translate(${rnd(-2.5, 2.5)}%, ${rnd(-1.6, 1.6)}%) rotate(${rnd(-4, 4)}deg)`);
+      const copies = book.querySelectorAll('.copy'); if (copies.length > 9) copies[0].remove();   // only the top of the pile is ever seen
+      await wait(230 - 175 * t);
     }
-    if (id === run) land();
+    if (id !== run) return;
+    sheets.forEach(s => s.classList.remove('unprinted'));
+    fly(sheets[0], 360, 'none').finished.then(() => { if (id === run) sheets[0].getAnimations().forEach(a => a.cancel()); });
   }
-  Promise.race([ready, wait(8000).then(() => 'late')]).then(v => v === 'late' ? land() : flicker());
-  logos.forEach(l => l.addEventListener('click', () => ready.then(flicker)));
+  Promise.race([ready, wait(8000).then(() => 'late')]).then(v => { if (v !== 'late') press(); });
+  document.querySelectorAll('.mast__logo').forEach(l => { l.style.cursor = 'pointer'; l.addEventListener('click', () => ready.then(press)); });
 })();
 </script>
 </body>
