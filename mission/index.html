@@ -66,8 +66,6 @@ html[data-flip="fold"] .page--solo { display: none; }
 /* ---- the press: whole copies of the paper fly off the press onto the desk, each with WAY. in a different face ---- */
 .sheet.unprinted { opacity: 0; }
 .sheet.copy { z-index: 0; }
-.copy .mast__logo img { visibility: hidden; }
-.copy .mast__type { display: grid; }
 .mast__type { display: none; grid-area: 1 / 1; align-self: stretch; margin: 0; place-items: center; font: 400 17cqw/1 var(--mark); white-space: nowrap; overflow: hidden; color: inherit; }
 
 /* ---- masthead ---- */
@@ -176,13 +174,15 @@ html.scrolled .hint { opacity: 0; }
 @media (max-width: 640px) {
   .switch { right: 12px; bottom: 54px; }
   .book { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
-  .sheet, .flap, .cast, .stackshade { width: 94vw; aspect-ratio: 0.43; }
+  /* the paper fits the screen: as tall as the view allows above the menu bar, so nothing runs off the bottom; the photos give up the height */
+  .sheet, .flap, .cast, .stackshade { width: 94vw; aspect-ratio: auto; height: calc(100svh - env(safe-area-inset-top, 0px) - 12px - 62px - env(safe-area-inset-bottom, 0px)); }
   .page { font-size: 2.6cqw; }
   .lead { grid-template-columns: 1fr; gap: 2.4cqw; }
   .lead { grid-template-rows: 1fr auto; }   /* the photo takes the spare height, the words sit right under it */
   .lead__text { justify-content: flex-start; }
   .lead__photo { width: 100%; }
-  .lead__photo img { flex: 1 1 0; height: auto; min-height: 40cqw; }
+  .lead__photo img { flex: 1 1 0; height: 0; min-height: 18cqw; }
+  .lead__photo { min-height: auto; }
   .page:has(.lead) { padding-bottom: 6cqw; }
   .statement { font-size: 2.75cqw; line-height: 1.5; }
   .page { padding-top: 3cqw; }
@@ -201,6 +201,14 @@ html.scrolled .hint { opacity: 0; }
   .spread__below .greek { font-size: 5.6cqw; }
   .spread__below .gloss { font-size: 2.6cqw; grid-template-columns: 1fr; gap: .2cqw; }
   .spread__below .gloss dd { margin-bottom: 1.6cqw; }
+}
+/* short phones (a small screen with the browser bars showing): tighten the type a little so the photo keeps some height */
+@media (max-width: 640px) and (max-height: 620px) {
+  .mast__logo { padding: 1.8cqw 2.4cqw; }
+  .statement { font-size: 2.55cqw; line-height: 1.45; }
+  .verses { font-size: 2.3cqw; line-height: 1.42; }
+  .verse { margin-bottom: 1.2cqw; }
+  .rail .entry p:not(.date) { font-size: 2.3cqw; line-height: 1.45; }
 }
 /* ---- the site's own header, laid on the desk beside the paper: the shell home, and the three ways in ---- */
 .site { position: fixed; z-index: 45; top: max(22px, env(safe-area-inset-top, 0px)); left: max(28px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; align-items: flex-start; gap: 18px; color: var(--paper); }
@@ -405,9 +413,9 @@ html.scrolled .hint { opacity: 0; }
 
   // ---- the press: copy after copy of the paper flies off the press and lands on the desk a little crooked, each with
   //      WAY. set in a different face, faster and faster, until the real paper (the topo WAY.) lands square on top ----
-  const FONTS = ['frijole','righteous','rubikwetpaint','sixtyfour','bigshouldersstencildisplay','wallpoet','anton','saira','librebarcode39text','majormonodisplay','monoton','fasterone','rubikglitch','playfairdisplay','lacquer','tiltprism','nosifer','bowlbyone','zentokyozoo','shrikhand','abrilfatface','trainone','rubikmicrobe','bungeeshade','monofett','bodonimoda','unifrakturmaguntia','pressstart2p'];
-  const faces = FONTS.map(f => new FontFace('flick-' + f, `url(/mission/flick/${f}.woff2)`)); faces.forEach(f => document.fonts.add(f));
-  const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), ...faces.map(f => f.load().catch(() => null))]);
+  // the press prints the real page, so it waits for the page's own faces and the masthead
+  const logo = new Image(); logo.src = '/img/logo/way-topo-row-white-bolder.svg?v=2';
+  const ready = Promise.all([document.fonts.load('400 100px Audiowide', 'WAY.'), document.fonts.ready, logo.decode().catch(() => null)]);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const rnd = (a, b) => a + Math.random() * (b - a);
   const plate = document.getElementById('front').innerHTML;   // the front page, as printed
@@ -457,7 +465,7 @@ html.scrolled .hint { opacity: 0; }
     const st = document.createElement('img'); st.className = 'shellstamp'; st.src = '/img/paper/shell-stamp.png'; st.alt = ''; st.setAttribute('aria-hidden', 'true');
     const pw = page.offsetWidth, ph = page.offsetHeight, phone = matchMedia('(max-width: 640px)').matches;
     st.style.left = (pw * ((phone ? .06 : .07) + Math.random() * .1)) + 'px';
-    st.style.top = (ph - pw * ((phone ? .3 : .215) + Math.random() * .035)) + 'px';
+    st.style.top = (ph - pw * ((phone ? .2 : .215) + Math.random() * .035)) + 'px';
     const rot = (Math.random() - .5) * 40;
     page.appendChild(st);
     st.animate([{ transform: `rotate(${rot}deg) scale(1.25)`, opacity: 0 }, { transform: `rotate(${rot}deg) scale(.97)`, opacity: 1, offset: .6 }, { transform: `rotate(${rot}deg) scale(1)`, opacity: .95 }],
@@ -495,20 +503,20 @@ html.scrolled .hint { opacity: 0; }
     if (scrollY > 2) scrollTo(0, 0);
     book.querySelectorAll('.copy').forEach(c => c.remove());
     sheets.forEach(s => s.classList.add('unprinted'));
-    const order = FONTS.slice().sort(() => Math.random() - .5), n = 20;
-    await wait(300);
+    const n = 10;
+    await wait(200);
     for (let k = 0; k < n; k++) {
       if (id !== run) return;
       const t = k / (n - 1);
       const c = document.createElement('div'); c.className = 'sheet copy'; c.setAttribute('aria-hidden', 'true');
       c.innerHTML = '<div class="page">' + plate + '</div>';
       c.querySelectorAll('.stamp').forEach(x => x.remove());                 // stamps go on by hand, after printing
-      const type = c.querySelector('.mast__type'); type.style.fontFamily = `'flick-${order[k % order.length]}'`;
+      c.querySelectorAll('.mast__type').forEach(x => x.remove());
       book.insertBefore(c, sheets[0]);                                        // each new copy on top of the last, under the real paper
-      fitType(type, c.querySelector('.mast__logo img')); fitLeads();
-      slam(c, 300 - 150 * t, rnd(-2, 2), rnd(-1.2, 1.2), rnd(-2.5, 2.5));
+      fitLeads();
+      slam(c, 280 - 130 * t, rnd(-2, 2), rnd(-1.2, 1.2), rnd(-2.5, 2.5));
       const copies = book.querySelectorAll('.copy'); if (copies.length > 4) copies[0].remove();   // a short pile keeps page turns light   // only the top of the pile is ever seen
-      await wait(230 - 175 * t);
+      await wait(200 - 130 * t);
     }
     if (id !== run) return;
     sheets.forEach(s => s.classList.remove('unprinted'));
