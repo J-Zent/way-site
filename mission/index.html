@@ -131,7 +131,8 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .verse { break-inside: avoid; margin: 0 0 1.6cqw; }
 .verse p { margin: 0; }
 .verse cite { display: block; margin-top: .5cqw; font: 500 1.15cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; font-style: normal; }
-.lord { font-variant: small-caps; letter-spacing: .04em; }
+.lord { letter-spacing: .04em; }
+.lord span { font-size: .78em; text-transform: uppercase; -webkit-text-stroke: .016em currentColor; }   /* small capitals drawn by hand: the browser's fake small caps shrink the strokes too, so the weight is put back */
 .gloss { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .8cqw 1.6cqw; }
 .gloss dt { font: 700 1.9cqw/1.5 "Fira Mono", var(--mono); }
 .gloss dd { margin: 0; }
@@ -293,7 +294,7 @@ html.scrolled .hint { opacity: 0; }
     <span class="kicker">Why WAY.</span>
     <h2 class="head">The inspiration</h2>
     <div class="verse"><p>Jesus answered, &ldquo;I am the way and the truth and the life. No one comes to the Father except through me.&rdquo;<cite>John 14:6 · NIV</cite></div>
-    <div class="verse"><p>This is what the <span class="lord">Lord</span> says: &ldquo;Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.&rdquo;<cite>Jeremiah 6:16 · NIV</cite></div>
+    <div class="verse"><p>This is what the <span class="lord">L<span>ord</span></span> says: &ldquo;Stand at the crossroads and look; ask for the ancient paths, ask where the good way is, and walk in it, and you will find rest for your souls.&rdquo;<cite>Jeremiah 6:16 · NIV</cite></div>
     <div class="verse"><p>Therefore, brothers and sisters, since we have confidence to enter the Most Holy Place by the blood of Jesus, by a new and living way opened for us through the curtain, that is, his body.<cite>Hebrews 10:19&ndash;20 · NIV</cite></div>
   </div>
   <div class="foot"><span>Page 1 of 2</span><span>scroll to turn the page</span></div>
