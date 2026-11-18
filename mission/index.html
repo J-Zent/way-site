@@ -155,6 +155,9 @@ figcaption { margin-top: .6cqw; font: 400 1.2cqw/1.4 var(--mono); letter-spacing
 .rail .head { font-size: 3.6cqw; margin-bottom: 1.6cqw; }
 .rail .entry p:not(.date) { text-align: left; hyphens: manual; font-size: 1.8cqw; line-height: 1.5; }   /* ragged right reads better in a narrow rail */
 .rail .entry { margin-bottom: 1.6cqw; }
+.dispatch p { margin: 0 0 1.4cqw; font-size: 2.05cqw; line-height: 1.55; text-align: left; }
+.dispatch .dispatch__from { font: 500 1.2cqw/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: .9cqw; }
+.dispatch .dispatch__by { font: 500 1.5cqw/1.4 var(--mono); letter-spacing: .12em; margin-top: 1.8cqw; }
 .rail .pull { margin-top: auto; font-size: 2.5cqw; }
 .spread__photo { display: flex; flex-direction: column; min-height: 0; }
 .spread__photo img { flex: 1 1 0; min-height: 0; height: 0; object-fit: cover; object-position: 50% 62%; }
@@ -195,6 +198,9 @@ html.scrolled .hint { opacity: 0; }
   .kicker { font-size: 1.9cqw; }
   h2.head { font-size: 5.6cqw; }
   .rail .entry p:not(.date) { font-size: 2.45cqw; }
+  .dispatch p { font-size: 2.7cqw; }
+  .dispatch .dispatch__from { font-size: 1.7cqw; }
+  .dispatch .dispatch__by { font-size: 2cqw; }
   .spread__below .greek { font-size: 5.6cqw; }
   .spread__below .gloss { font-size: 2.6cqw; grid-template-columns: 1fr; gap: .2cqw; }
   .spread__below .gloss dd { margin-bottom: 1.6cqw; }
@@ -250,6 +256,18 @@ html.scrolled .hint { opacity: 0; }
 
 </div>
 
+<!-- ON THE WAY: pieces by different writers, one shown per visit. To add one, copy a block and fill it in:
+     "from" is the small line above (who or where it's from), "text" is the piece (a blank line between paragraphs), "by" is the signature.
+     Keep each to about 150 to 200 words so it fits the column on a phone. -->
+<script type="application/json" id="dispatches">
+[
+  {
+    "from": "From the creator",
+    "text": "A lot of people have asked me, \u201cwhat is the point of this?\u201d Nothing. There isn\u2019t really a point to it. I get quite a few confused looks back, and ya know, I\u2019m ok with that.\n\nThis whole site has been developed out of simple delight: the joy of taking something in your mind and allowing it to find its way into existence.",
+    "by": "JZ"
+  }
+]
+</script>
 <!-- page contents live in templates, so the fold variant can draw each page twice without repeating the markup -->
 <template id="t-front">
   <hr class="rule rule--double">
@@ -283,15 +301,13 @@ html.scrolled .hint { opacity: 0; }
 
 <template id="t-notes">
   <hr class="rule rule--double">
-  <div class="bar"><span>Field notes</span><i>✱</i><span>Journal</span><i>✱</i><span class="today">—</span></div>
+  <div class="bar"><span>Dispatch</span><i>✱</i><span>On the way</span><i>✱</i><span class="today">—</span></div>
   <hr class="rule">
   <div class="spread">
     <div class="rail">
-      <span class="kicker">Journal</span>
-      <h2 class="head">Notes from the trail</h2>
-      <div class="entry"><p class="date">Entry 01 · place · date</p><p>Placeholder text for the first entry. A short account of a morning: where we started, what the light did on the water, the moment someone stopped walking and just looked. Two or three paragraphs at most, written plainly.</p></div>
-      <div class="entry"><p class="date">Entry 02 · place · date</p><p>Placeholder for a second entry. This one might be about a map: the ridge we traced with a finger the night before, and how different it felt underfoot. Room here for a small photograph, printed in black and white.</p></div>
-      <div class="entry"><p class="date">Entry 03 · place · date</p><p>Placeholder for a third entry. Shorter. A single thought carried home from a long day, set down before it fades. The kind of note you find later in a jacket pocket.</p></div>
+      <span class="kicker">Dispatch</span>
+      <h2 class="head">On the way</h2>
+      <article class="dispatch" aria-live="polite"></article>
     </div>
     <figure class="spread__photo"><img src="/img/mission/sail.png" srcset="/img/mission/sail-600.png 600w, /img/mission/sail.png 900w" sizes="(max-width: 640px) 60vw, 34vw" alt="A sailboat crossing a lake below hazy mountains, pine boughs hanging into the frame."><figcaption>Frame 05 · ISO 400 · ƒ/8 · 1/250</figcaption></figure>
     <div class="spread__below">
@@ -323,6 +339,18 @@ html.scrolled .hint { opacity: 0; }
   root.dataset.flip = flip;
   document.querySelectorAll('.switch a').forEach(a => { if (a.dataset.flip === flip) a.setAttribute('aria-current', 'true'); });
 
+  // ON THE WAY: pick today's piece and set it into page two's template before the pages are drawn
+  (() => {
+    let list = []; try { list = JSON.parse(document.getElementById('dispatches').textContent); } catch (e) {}
+    const box = document.getElementById('t-notes').content.querySelector('.dispatch'); if (!box || !list.length) return;
+    let last = -1; try { last = +localStorage.getItem('way-dispatch'); } catch (e) {}
+    let k = Math.floor(Math.random() * list.length); if (list.length > 1 && k === last) k = (k + 1 + Math.floor(Math.random() * (list.length - 1))) % list.length;
+    try { localStorage.setItem('way-dispatch', k); } catch (e) {}
+    const d = list[k], el = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; n.textContent = txt; return n; };
+    if (d.from) box.appendChild(el('p', 'dispatch__from', d.from));
+    String(d.text || '').split(/\n\s*\n/).forEach(t => box.appendChild(el('p', '', t.trim())));
+    if (d.by) box.appendChild(el('p', 'dispatch__by', '\u2014 ' + d.by));
+  })();
   // fill the pages from their templates (the fold variant draws each page twice, clipped into halves)
   const fill = (el, id) => { el.innerHTML = ''; el.appendChild(document.getElementById('t-' + id).content.cloneNode(true)); };
   for (const id of ['front', 'notes']) {
