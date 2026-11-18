@@ -177,12 +177,9 @@ html.scrolled .hint { opacity: 0; }
   /* the paper fits the screen: as tall as the view allows above the menu bar, so nothing runs off the bottom; the photos give up the height */
   .sheet, .flap, .cast, .stackshade { width: 94vw; aspect-ratio: auto; height: calc(100svh - env(safe-area-inset-top, 0px) - 12px - 62px - env(safe-area-inset-bottom, 0px)); }
   .page { font-size: 2.6cqw; }
-  .lead { grid-template-columns: 1fr; gap: 2.4cqw; }
-  .lead { grid-template-rows: 1fr auto; }   /* the photo takes the spare height, the words sit right under it */
-  .lead__text { justify-content: flex-start; }
-  .lead__photo { width: 100%; }
-  .lead__photo img { flex: 1 1 0; height: 0; min-height: 18cqw; }
-  .lead__photo { min-height: auto; }
+  .lead { grid-template-columns: 38cqw 1fr; gap: 3.4cqw; }   /* as on the computer: the photo tall on the left, the mission beside it */
+  .lead__photo { width: 100%; min-height: 0; }
+  .lead__photo img { flex: 1 1 0; height: 0; min-height: 0; }
   .page:has(.lead) { padding-bottom: 6cqw; }
   .statement { font-size: 2.75cqw; line-height: 1.5; }
   .page { padding-top: 3cqw; }
@@ -435,9 +432,8 @@ html.scrolled .hint { opacity: 0; }
     const wide = !matchMedia('(max-width: 640px)').matches;
     document.querySelectorAll('.lead').forEach(lead => {
       const st = lead.querySelector('.statement'), text = lead.querySelector('.lead__text');
-      if (!wide) { st.style.fontSize = ''; st.style.lineHeight = ''; return; }
       const H = lead.clientHeight; text.style.justifyContent = 'flex-start'; const used = () => st.offsetTop + st.offsetHeight - text.children[0].offsetTop;
-      const pw = lead.clientWidth; let lo = pw * .022, hi = pw * .045;
+      const pw = lead.clientWidth; let lo = pw * (wide ? .022 : .024), hi = pw * (wide ? .045 : .05);
       st.style.lineHeight = '';
       for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; st.style.fontSize = m + 'px'; (used() + 2 <= H ? lo = m : hi = m); }
       st.style.fontSize = lo + 'px';
