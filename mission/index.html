@@ -214,7 +214,7 @@ html.scrolled .hint { opacity: 0; }
 .site .nav { display: flex; flex-direction: column; gap: 4px; }
 .site .nav a { position: relative; color: inherit; font: 500 12px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; padding: 8px 2px; }
 .site .nav .swash { position: absolute; left: -3px; width: calc(100% + 9px); bottom: 1px; height: 8px; fill: var(--lemon); z-index: -1; pointer-events: none; clip-path: inset(0 100% 0 0); transition: clip-path .32s cubic-bezier(.3, .7, .3, 1); }
-.site .nav a:hover .swash, .site .nav a:focus-visible .swash, .site .nav a[aria-current] .swash { clip-path: inset(0 0 0 0); }
+.site .nav a:hover .swash, .site .nav a:focus-visible .swash, .site .nav a:active .swash { clip-path: inset(0 0 0 0); }   /* only on hover or press, even for the page you're on */
 .site .nav a[aria-current] { color: var(--paper); }
 /* narrower screens: no room beside the paper, so the ways in sit along the bottom edge, over the desk */
 @media (max-width: 1099px) {
